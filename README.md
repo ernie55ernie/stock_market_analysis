@@ -61,3 +61,15 @@ A UI to present stock data of listed market
 - query data by condition: `<table name>.objects.filter(<column name> = ...>`
 - sort data: `<table name>.objects.order_by(<column name>)`(add '-' for decending)
 - distinct: `<table name>.objects.values(<column name>).distinct()`
+
+### misc
+
+1. download data to data_samples
+`code/acknowledgement.ipynb`
+
+2. sqlite migration
+`python manage.py makemigrations meta_data`
+`python manage.py makemigrations price`
+
+3. import csv to sqlite
+`.import stock_market_analysis/data_sample/stock_meta_data.csv(absolute path) meta_data_stockmetadata`
