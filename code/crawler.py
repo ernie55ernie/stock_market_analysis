@@ -48,11 +48,11 @@ def query_mops(year, data_type, stock_code=None, step=1):
 
 
 def query_dividend(stock_code):
-    url = f"https://tw.stock.yahoo.com/d/s/dividend_{stock_code}.html"
+    url = f"https://tw.stock.yahoo.com/quote/{stock_code}/dividend" #f"https://tw.stock.yahoo.com/d/s/dividend_{stock_code}.html"
     season_dict = {'第一季': 1, '第二季': 2, '第三季': 3, '第四季': 4,
                   '上半': 1.5, '下半': 2.5}
     # Encode this website by Big5
-    df = pd.read_html(url, encoding="cp950")[3][[0, 1, 2, 5, 6]]
+    df = pd.read_html(url)[3][[0, 1, 2, 5, 6]] # , encoding="cp950"
     df.columns = ['year', 'distribute_date',
                   'cash_dividend', 'stock_dividend', 'total']
     df = df.drop(0)
@@ -115,7 +115,7 @@ def save(filename, target):
 
 def get_stock_meta_data():
     print('downloading data from website')
-    res = requests.get("http://isin.twse.com.tw/isin/C_public.jsp?strMode=2")
+    res = requests.get("https://isin.twse.com.tw/isin/C_public.jsp?strMode=2")
     print('creating dataframe')
     df = pd.read_html(res.text)[0][[0, 2, 4]]
     df = df.drop([0, 1]).dropna().reset_index(drop=True)
@@ -126,8 +126,9 @@ def get_stock_meta_data():
         code_and_name.append(rename)
 
     df[['code', 'name']] = pd.DataFrame(code_and_name)
+    df['company_type'] = 'standard'
 
-    return df[['code', 'name', 'listed_date', 'industry_type']].iloc[0:952]
+    return df[['code', 'name', 'listed_date', 'industry_type', 'company_type']].iloc[0:952]
 
 
 def get_cashflow_table(year, previous=None):
@@ -188,26 +189,26 @@ def get_historical_price():
 
 def get_multiple_company_tables(term, company_columns, company_column_names, company_type):
     raw_data = {}
-    for year in range(105, 110):
-        print(year)
+    for year in range(108, 113):
+        print('year', year)
         data, _ = query_mops(year, term)
         for i in company_type:
             print(i)
             for season in range(4):
-                selected_columns = []
+                selected_columns = ['公司 代號']
                 columns = [('year', 'code')] + [(f"{year}_{season+1}", col_names) 
                                                for col_names in company_column_names[i]]
-                for col in company_columns[company_type[i]]:
-                    if col in data[season][i].columns:
+                for col in company_columns[company_type[i]]: # 公司代號
+                    if col in data[season][i].columns: # '公司 代號'
                         selected_columns.append(col)
                         # print(col)
                         # if col != '公司代號':
                         #    columns.append((f"{year}_{season+1}", col))
-        #        print(columns)
+                #print(columns)
                 data1 = data[season][i][selected_columns]
-        #        print(data1.columns)
+                #print(data1.columns)
                 data1.columns = pd.MultiIndex.from_tuples(columns)
-                if year == 105 and season == 0:
+                if year == 108 and season == 0:
                     raw_data[i] = data1
                 else:
                     raw_data[i] = raw_data[i].merge(
@@ -267,8 +268,10 @@ if __name__ == '__main__':
             try:
                 d = query_dividend(stock_code)
                 result[stock_code] = d
-            except:
+            except Exception as e:
+                print(e)
                 print(stock_code, 'fail')
+            break
         save('dividend.pkl', result)
 
     elif args.target == 'cashflow':
