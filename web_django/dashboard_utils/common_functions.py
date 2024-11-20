@@ -1,4 +1,4 @@
-import dash_table
+from dash import dash_table
 import pandas as pd
 
 
