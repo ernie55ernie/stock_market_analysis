@@ -27,7 +27,7 @@ def make_ranking(df, sort_key, ascending=True, filter_PE=False):
     #    return processed_df.values.tolist()
     result_list = []
     for sublist in processed_df.values.tolist():
-        code = sublist[1].split(' ')[0]
+        code = sublist[1]#.split(' ')[0]
         url = meta_data.filter(code=code)[0].get_price_url()
         result_list.append([sublist, url])
 
