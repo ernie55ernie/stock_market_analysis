@@ -1,3 +1,5 @@
+import os
+import sys
 import pandas as pd
 import yfinance as yf
 from django.shortcuts import render
@@ -6,7 +8,7 @@ from datetime import datetime, timedelta
 # from .models import StockMetaData
 from price.models import PriceData, InstitutionalInvestorData
 
-from .util import ROOT, meta_data, download_stock_price, download_institutional_investor, download_punishment
+from .util import ROOT, get_stocks, get_meta_data, download_stock_price, download_institutional_investor, download_punishment
 from .update_db import update_price_table, update_institutional_table
 
 # root = Path(__file__).resolve().parent
@@ -18,7 +20,9 @@ print('today: ', today)
 print('previous_date: ', previous)
 
 # meta_data = StockMetaData.objects.all()
-stocks = [stock.__str__() for stock in meta_data]
+stocks = []
+if 'makemigrations' not in sys.argv and 'migrate' not in sys.argv:
+    stocks = get_stocks()
 
 
 def get_latest_data():  # 即時爬取大盤資料
@@ -79,7 +83,14 @@ def update_institutional_table(df, date):
 def update_data(compare_date, token):
     # 下載資料+更新db, table: 0/1
     table = {0: 'price', 1: 'institutional'}
-    with open(f"{ROOT}/data_date_record.txt", "r") as f:
+    file_path = f"{ROOT}/data_date_record.txt"
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        print(f"{file_path} not found. Creating a new file.")
+        with open(file_path, "w") as f:
+            f.write("2024-01-01\n2024-01-01\n")  # Default content
+    
+    with open(file_path, "r") as f:
         contents = f.readlines()
 
     last_date = contents[token]
@@ -110,7 +121,7 @@ def update_data(compare_date, token):
         if len(dates):
             contents[token] = dates[-1] + '\n'
             print(contents)
-            with open(f"{ROOT}/data_date_record.txt", 'w') as f:
+            with open(file_path, 'w') as f:
                 f.writelines(contents)
             print('creating daily report')
 
@@ -126,21 +137,39 @@ def update_data(compare_date, token):
 def sum_up():
     # 製作每日報告
     price_data = PriceData.objects.all().order_by('-date')
-    today = price_data.values('date').distinct()[0]
+    dates = price_data.values('date').distinct()
+
+    print(f"Distinct dates: {dates}")
+
+    # Check if there are any dates
+    if not dates.exists():
+        print("No price data available.")
+        return
+
+    today = dates[0]  # Fetch the most recent date
+    print(f"Today's date: {today}")
     previous_day = price_data.values('date').distinct()[1]
     # print(today, previous_day)
     today_price_data = price_data.filter(date=today['date'])
-    today = InstitutionalInvestorData.objects.order_by('-date').values(
-        'date').distinct()[0]
+    # Query the latest institutional investor data
+    today_data = InstitutionalInvestorData.objects.order_by('-date').values('date').distinct()
+
+    if not today_data.exists():  # Check if any data exists
+        print("No institutional investor data found.")
+        return  # Or handle this case appropriately
+
+    # Access the first element if data exists
+    today = today_data[0]
     institutional_data = InstitutionalInvestorData.objects.filter(
         date=today['date'])
 
+    meta_data = get_meta_data()
     price_df = [[
         row.code,
         meta_data.filter(code=row.code)[0].name,
         meta_data.filter(code=row.code)[0].industry_type, row.Close,
         row.Volume, row.PE
-    ] for row in today_price_data]
+    ] for row in today_price_data if len(meta_data.filter(code=row.code)) > 0]
     price_df = pd.DataFrame(price_df,
                             columns=[
                                 'code', 'name', 'industry_type', 'today_close',
@@ -169,8 +198,8 @@ def sum_up():
     df['updowns'] = round(df['today_close'] - df['previous_close'], 2)
     df['fluctuation'] = round((df['today_close'] - df['previous_close']) *
                               100 / df['previous_close'], 2)
-    df['code'] = df['code'] + ' ' + df['name']
-    del df['name']
+#     df['code'] = df['code'] + ' ' + df['name']
+#     del df['name']
     # print(df)
     df.to_csv(f"{ROOT}/daily_report.csv", index=False)
 
@@ -180,11 +209,21 @@ def daily_correlation():
     for code in stocks:
         code = code.split(' ')[0]
         query_set = PriceData.objects.filter(code=code).order_by('date')
+        if not query_set.exists():
+            print(f"No data found for stock code: {code}")
+            continue
         dates, close = [], []
         for row in query_set:
             dates.append(row.date)
             close.append(row.Close)
-        df_closing.append(pd.DataFrame(close, index=dates, columns=[code]))
+        if dates and close:
+            df_closing.append(pd.DataFrame(close, index=dates, columns=[code]))
+        else:
+            print(f"No valid closing data for stock code: {code}")
+    # Check if df_closing is empty
+    if not df_closing:
+        print("No data available for correlation. Skipping concatenation.")
+        return
     df_closing = pd.concat(df_closing, axis=1)
     corr = df_closing.corr()
     #    print(corr)
