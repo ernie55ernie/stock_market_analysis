@@ -15,9 +15,15 @@ institutional_data = InstitutionalInvestorData.objects.all()
 
 # Create your views here.
 def download(stock_code):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+        "Referer": "https://concords.moneydj.com/",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+    }
     url1 = f"https://concords.moneydj.com/z/zc/zcj/zcj_{stock_code}.djhtm"
     url2 = f"https://concords.moneydj.com/z/zc/zcm/zcm_{stock_code}.djhtm"
-    res = requests.get(url1)
+    res = requests.get(url1, headers=headers)
     soup = BeautifulSoup(res.text, "lxml")
     table = soup.select('table')[-1]
     date = table.find_all("div", "t11")[0].text
@@ -28,7 +34,7 @@ def download(stock_code):
     data['increment'] = data['increment'].apply(lambda x: x.replace(',', ''))
     data['ratio'] = data['ratio'].apply(lambda x: x.replace('%', ''))
     data = data.replace('', '0.0')
-    res = requests.get(url2)
+    res = requests.get(url2, headers=headers)
     soup = BeautifulSoup(res.text, "lxml")
     total_amount = soup.select('table')[-1].find_all(
         'td', class_='t3n1')[0].text.replace(',', '')
