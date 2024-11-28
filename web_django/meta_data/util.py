@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import json
 import requests
@@ -11,8 +12,16 @@ from datetime import datetime, timedelta
 from .models import StockMetaData
 
 ROOT = Path(__file__).resolve().parent
-meta_data = StockMetaData.objects.all()
-stocks = [stock.__str__() for stock in meta_data]
+
+def get_meta_data():
+    if 'makemigrations' not in sys.argv and 'migrate' not in sys.argv:
+        return StockMetaData.objects.all()
+    return []
+
+def get_stocks():
+    if 'makemigrations' not in sys.argv and 'migrate' not in sys.argv:
+        return [stock.__str__() for stock in StockMetaData.objects.all()]
+    return []
 
 
 def preprocess(x):
@@ -23,7 +32,7 @@ def convert(x):
     if x == '--':
         return np.nan
     if type(x) == str:
-        return float(x.replace(',', ''))
+        return x.replace(',', '')#float(x.replace(',', ''))
     else:
         return x
 
@@ -46,8 +55,9 @@ def download_stock_price(datestr):  # 下載某天股價
                                  for l in r.text.split("\n")].index(True) - 1)
         df = df[['證券代號', '開盤價', '最高價', '最低價', '收盤價', '成交股數', '本益比']]
         df.columns = ['code', 'Open', 'High', 'Low', 'Close', 'Volume', 'PE']
-        stock_codes = [c.split(' ')[0] for c in stocks]
-        df = df[df['code'].isin(stock_codes)].reset_index(drop=True)
+        # stock_codes = [c.split(' ')[0] for c in get_stocks()]
+        # df = df[df['code'].isin(stock_codes)].reset_index(drop=True)
+        df = df.reset_index(drop=True)
         converted_df = {}
         for col in df.columns:
             converted_df[col] = df[col].apply(convert)
@@ -58,17 +68,22 @@ def download_stock_price(datestr):  # 下載某天股價
 
 
 def download_institutional_investor(date):
-    # 下載某天三大法人
-    r = requests.get('http://www.twse.com.tw/fund/T86?response=csv&date=' +
-                     date + '&selectType=ALL')
+    # 下載某天三大法人 # 20241118
+    #time.sleep(30)
+    r = requests.get('https://www.twse.com.tw/rwd/zh/fund/T86?date=' +
+                     date + '&selectType=ALL&response=csv')
     try:
         df = pd.read_csv(StringIO(r.text),
                          header=1).dropna(how='all', axis=1).dropna(how='any')
     except pd.errors.EmptyDataError:
         print(f'{date} no data')
         return
-    stock_codes = [c.split(' ')[0] for c in stocks]
-    df = df[np.isin(df['證券代號'], stock_codes)].reset_index(drop=True)
+    except Exceptions as e:
+        print(e)
+        return
+    #stock_codes = [c.split(' ')[0] for c in get_stocks()]
+    #df = df[np.isin(df['證券代號'], stock_codes)].reset_index(drop=True)
+    df = df.reset_index(drop=True)
     df['外資買進股數'] = df['外陸資買進股數(不含外資自營商)'].apply(preprocess)
     df['外資賣出股數'] = df['外陸資賣出股數(不含外資自營商)'].apply(preprocess)
     df['自營商買進股數'] = df['自營商買進股數(自行買賣)'].apply(
@@ -89,13 +104,19 @@ def download_institutional_investor(date):
 
 def download_punishment(compare_date):
     # 查詢處置股票
-    modify_time = os.path.getmtime(f'{ROOT}/punished.csv')
-    modify_time = time.strftime('%Y%m%d', time.localtime(modify_time))
-    if modify_time == compare_date:  #這天已經查過 不用再查了
-        return
+    punished_file = f'{ROOT}/punished.csv'
+
+    # Check if the file exists
+    if os.path.exists(punished_file):
+        modify_time = os.path.getmtime(punished_file)
+        modify_time = time.strftime('%Y%m%d', time.localtime(modify_time))
+        if modify_time == compare_date:  # If already checked today, skip 這天已經查過 不用再查了
+            return
+    else:
+        modify_time = datetime.strftime(datetime.strptime(compare_date, '%Y%m%d'), '%Y%m%d')
+        print(f"{punished_file} not found. Creating a new file.")
     end = datetime.strptime(compare_date, '%Y%m%d') + timedelta(days=1)
     end = datetime.strftime(end, '%Y%m%d')
-
     r = requests.post(
         f'https://www.twse.com.tw/announcement/punish?response=json&startDate={modify_time}&endDate={end}'
     )
