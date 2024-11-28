@@ -12,9 +12,9 @@ models = [model for model in apps.get_models() if hasattr(model, 'get_columns')]
 def update_price_table(df, date):
     # 更新股價db
     for i in range(len(df)):
-        row = PriceData(code=int(df.code[i]),
+        row = PriceData(code=df.code[i],#int(df.code[i]),
                         date=date,
-                        key=f"{int(df.code[i])} {date}",
+                        key=f"{df.code[i]} {date}",#f"{int(df.code[i])} {date}",
                         Open=df.Open[i],
                         High=df.High[i],
                         Low=df.Low[i],
@@ -28,9 +28,9 @@ def update_price_table(df, date):
 
 def update_institutional_table(df, date):
     for i in range(len(df)):
-        row = InstitutionalInvestorData(code=int(df.code[i]),
+        row = InstitutionalInvestorData(code=df.code[i],#int(df.code[i]),
                                         date=date,
-                                        key=f'{int(df.code[i])} {date}',
+                                        key=f'{df.code[i]} {date}',#f'{int(df.code[i])} {date}',
                                         foreign_buy=df.foreign_buy[i],
                                         foreign_sell=df.foreign_sell[i],
                                         invest_buy=df.invest_buy[i],
@@ -54,7 +54,7 @@ def add_listing(df):
                 name=df['公司簡稱'].iloc[i],
                 listed_date=df['listed_date'].iloc[i],
                 industry_type=df['產業別'].iloc[i],
-                company_type=standard
+                company_type='standard'
                 )
         row.save()
     checker = Checker(PriceData)
