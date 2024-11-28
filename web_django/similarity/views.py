@@ -1,3 +1,5 @@
+import os
+import sys
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -16,7 +18,14 @@ from .util import create_dash
 
 root = str(Path(__file__).resolve().parent.parent) + '/meta_data'
 #print(root)
-correlation = pd.read_csv(f'{root}/daily_corr.csv')
+correlation = None
+file_path = f'{root}/daily_corr.csv'
+if 'makemigrations' not in sys.argv and 'migrate' not in sys.argv:
+    if os.path.exists(file_path):
+        correlation = pd.read_csv(file_path)
+    else:
+        print(f"{file_path} not found. Using empty DataFrame as fallback.")
+        correlation = pd.DataFrame()
 same_trade = []
 meta_data = StockMetaData.objects.all()
 price_data = PriceData.objects.all().order_by('date')
