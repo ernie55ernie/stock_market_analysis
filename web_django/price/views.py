@@ -1,9 +1,11 @@
+import os
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.http import HttpResponse
 
 from .models import PriceData, InstitutionalInvestorData
 from meta_data.models import StockMetaData
@@ -16,7 +18,12 @@ meta_data = StockMetaData.objects.all()
 institutional_data = InstitutionalInvestorData.objects.all()
 stock_code = ''
 history = pd.DataFrame([])
-punished = pd.read_csv(f'{root}/meta_data/punished.csv')
+punished_path = f'{root}/meta_data/punished.csv'
+if os.path.exists(punished_path):
+    punished = pd.read_csv(punished_path)
+else:
+    print("punished.csv not found. Using empty DataFrame.")
+    punished = pd.DataFrame()
 
 
 # Create your views here.
@@ -88,7 +95,13 @@ def get_price(stock_id, today, price_data):
 
 
 def main(request, stock_id):
-    info = meta_data.filter(code=stock_id)[0]
+    info = meta_data.filter(code=stock_id)
+    if not info.exists():
+        print(f"No data found for stock_id: {stock_id}")
+        return HttpResponse(f"Stock ID {stock_id} not found.")  # Or handle as needed
+
+    # Safely access the first result
+    info = info[0]
     same_trade = meta_data.filter(industry_type=info.industry_type)
     price_data = PriceData.objects.all().order_by('-date')
     today = str(price_data[0].date).strip()
