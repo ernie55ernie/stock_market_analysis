@@ -36,7 +36,7 @@ A UI to present stock data of listed market
 
 4. ROE (股東權益報酬）= 稅後淨利/權益總額
 
-## django
+### django
 
 1. start project: `django-admin startproject <project name>`
 
@@ -70,6 +70,30 @@ A UI to present stock data of listed market
 2. sqlite migration
 `python manage.py makemigrations meta_data`
 `python manage.py makemigrations price`
+`python manage.py makemigrations monthly_revenue`
+`python manage.py makemigrations dividend`
+`python manage.py makemigrations asset_debt`
+`python manage.py makemigrations cashflow`
+`python manage.py makemigrations profit_loss`
+
+`python manage.py migrate`
 
 3. import csv to sqlite
 `.import stock_market_analysis/data_sample/stock_meta_data.csv(absolute path) meta_data_stockmetadata`
+
+4. 
+```
+python manage.py shell
+from monthly_revenue.update_db import main
+main(103, 1)
+```
+
+### Todo
+
+chip 籌碼分析
+monthly_revenue 月營收表
+profit_loss 損益表
+asset_debt 資產負債表
+cashflow 現金流量表
+dividend 股利政策
+similarity 相似性比較
