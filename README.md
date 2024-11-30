@@ -93,6 +93,11 @@ from profit_loss.update_db import main
 main('add_data', 103, 1)
 ```
 
+```
+from asset_debt.update_db import main
+main('add_data', 103, 1)
+```
+
 ### Todo
 
 chip 籌碼分析
