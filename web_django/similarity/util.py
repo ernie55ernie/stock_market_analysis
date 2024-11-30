@@ -55,14 +55,15 @@ def plot_table(df):
 
 
 def create_dash(stock_code, data):
-    df = create_df(int(stock_code), data)
+    df = create_df(stock_code, data)
     table = plot_table(df)
-    features = [code for code in data if code != int(stock_code)]
+    features = [code for code in data if code != stock_code]
     checklist_style = {
         'width': '100%',
         'height': '30px',
-        'text-align': 'center'
+        'text-align': 'center',
     }
+    
 
     app = DjangoDash('Similarity_Dashboard')
     for code in data:
@@ -74,24 +75,35 @@ def create_dash(stock_code, data):
                     children="近90天股價走勢",
                     style={'text-align': 'center'}),
             dcc.Graph(id='line_plot', style=line_plot_style),
-            dcc.Checklist(
-                id='checkbox1',
-                options=[{
-                    'label':
-                    f"{features[i]} {data[features[i]]['basic'].name}  ",
-                    'value': features[i]
-                } for i in range(5)],
-                value=[],
-                style=checklist_style),
-            dcc.Checklist(
-                id='checkbox2',
-                options=[{
-                    'label':
-                    f"{features[i]} {data[features[i]]['basic'].name}  ",
-                    'value': features[i]
-                } for i in range(5, 10)],
-                value=[],
-                style=checklist_style),
+            html.Div(
+            [
+                dcc.Checklist(
+                    id='checkbox1',
+                    options=[{
+                        'label':
+                        f"{features[i]} {data[features[i]]['basic'].name}  ",
+                        'value': features[i]
+                    } for i in range(5)],
+                    value=[],
+                    style=checklist_style),
+                dcc.Checklist(
+                    id='checkbox2',
+                    options=[{
+                        'label':
+                        f"{features[i]} {data[features[i]]['basic'].name}  ",
+                        'value': features[i]
+                    } for i in range(5, 10)],
+                    value=[],
+                    style=checklist_style),
+            ],
+            style={
+                'display': 'flex',          # Use flexbox for layout
+                'justifyContent': 'space-between',  # Space out items evenly
+                'alignItems': 'center',     # Align items vertically
+                'height': '180px',
+                'gap': '20px',              # Optional: Add space between items
+            }
+        ),
             html.Div([table], style={
                 'marginTop': '50px',
             })
@@ -111,18 +123,18 @@ def create_dash(stock_code, data):
         fig = go.Figure()
         fig.add_trace(
             go.Scatter(
-                x=data[int(stock_code)]['price']['date'],
-                y=data[int(stock_code)]['price']['close'].values.reshape(-1),
+                x=data[stock_code]['price']['date'],
+                y=data[stock_code]['price']['close'].values.reshape(-1),
                 marker_color='black',
                 mode='lines+markers',
-                name=f"{stock_code} {data[int(stock_code)]['basic'].name}"))
+                name=f"{stock_code} {data[stock_code]['basic'].name}"))
         for code in selected_codes:
             fig.add_trace(
                 go.Scatter(
-                    x=data[int(code)]['price']['date'],
-                    y=data[int(code)]['price']['close'].values.reshape(-1),
+                    x=data[code]['price']['date'],
+                    y=data[code]['price']['close'].values.reshape(-1),
                     mode='lines+markers',
-                    name=f"{code} {data[int(code)]['basic'].name}"))
+                    name=f"{code} {data[code]['basic'].name}"))
 
         #for col in selected_features:
         fig.update_layout(title={

@@ -51,9 +51,11 @@ def get_score(stock_code):
     print(today)
     close = price.Close
     volume = price.Volume
-    price = [[int(row.code), row.Close, row.Volume]
+    price = [[row.code, row.Close, row.Volume]
              for row in PriceData.objects.filter(date=today)]
     price = pd.DataFrame(price, columns=['stock_id', 'close', 'volume'])
+    df['stock_id'] = df['stock_id'].astype(str)
+    price['stock_id'] = price['stock_id'].astype(str)
     df = df.merge(price, on='stock_id', how='left')
     df['close_sim'] = 1 - abs(np.log10(close) - np.log10(df['close']))
     df['volume_sim'] = 1 - abs(
@@ -92,24 +94,26 @@ def prepare_data(stock_code):
         if company_type == 'other':
             i += 1
             continue
-        EPS = profit_loss_table_dict[company_type].objects.filter(
-            code=id_).order_by('-season')[0]
-        #print(EPS)
-        if company_type in ['standard', 'other']:
-            PBR = StandardAssetDebtData.objects.filter(code=id_)
-        else:
-            PBR = NonStandardAssetDebtData.objects.filter(code=id_)
-        PBR = PBR.order_by('-season')[0]
-        dividend = DividendData.objects.filter(code=id_).order_by('-year')
-        data[id_] = {
-            'price': price,
-            'corr': corr,
-            'score': score,
-            'basic': basic,
-            'eps': EPS,
-            'pbr': PBR,
-            'dividend': dividend,
-        }
+        try:
+            EPS = profit_loss_table_dict[company_type].objects.filter(
+                code=id_).order_by('-season')[0]
+            if company_type in ['standard', 'other']:
+                PBR = StandardAssetDebtData.objects.filter(code=id_)
+            else:
+                PBR = NonStandardAssetDebtData.objects.filter(code=id_)
+            PBR = PBR.order_by('-season')[0]
+            dividend = DividendData.objects.filter(code=id_).order_by('-year')
+            data[id_] = {
+                'price': price,
+                'corr': corr,
+                'score': score,
+                'basic': basic,
+                'eps': EPS,
+                'pbr': PBR,
+                'dividend': dividend,
+            }
+        except:
+            print(id_, ' failed')
         i += 1
 
     return data
