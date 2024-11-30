@@ -33,7 +33,7 @@ def query_dividend(stock_code):
                     one_data = [cells[2].text, '0']
 
                 one_data[0] = int(one_data[0]) - 1911
-                for i in [3, 4, 6, 7, 8, 9]:
+                for i in [4, 5, 8, 9, 10, 11]:
                     one_data.append(cells[i].text)
 
                 data.append(one_data)
@@ -77,13 +77,15 @@ def main():
             latest_season = 0
         if (latest_year != df.iloc[0].year) or (latest_season !=
                                                 df.iloc[0].season):
+            cash = df.iloc[0].cash_dividend if isinstance(df.iloc[0].cash_dividend, float) else 0
+            stock = df.iloc[0].stock_dividend if isinstance(df.iloc[0].stock_dividend, float) else 0
             row = DividendData(code=int(stock_code),
                                year=df.iloc[0].year,
                                season=df.iloc[0].season,
-                               distribute_date=df.iloc[0].distribute_date,
-                               ex_dividend_date=df.iloc[0].ex_dividend_date,
-                               cash=df.iloc[0].cash_dividend,
-                               stock=df.iloc[0].stock_dividend)
+                               distribute_date=df.iloc[0].distribute_date if df.iloc[0].distribute_date else None,
+                               ex_dividend_date=df.iloc[0].ex_dividend_date if df.iloc[0].ex_dividend_date else None,
+                               cash=cash,
+                               stock=stock)
             row.save()
             print(stock_code, 'update dividend')
         if not i % 10 and i > 0:
