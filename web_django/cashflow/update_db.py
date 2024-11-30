@@ -64,11 +64,14 @@ def main(action, year, season, start=0):
         for i, stock in enumerate(stocks[start:]):
             id_ = stock.code
             print(id_)
-            if stock.company_type in ['bank', 'holdings', 'insurance']:
-                data = crawl(year, season, id_, 2)
-            else:
-                data = crawl(year, season, id_)
-            create_row(id_, data, f"{year}_{season}")
+            try:
+                if stock.company_type in ['bank', 'holdings', 'insurance']:
+                    data = crawl(year, season, id_, 2)
+                else:
+                    data = crawl(year, season, id_)
+                create_row(id_, data, f"{year}_{season}")
+            except:
+                print(id_, ' failed')
             if not i % 10 and i > 0:
                 print('take a 1-min break....')
                 time.sleep(60)
