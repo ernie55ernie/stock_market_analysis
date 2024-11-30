@@ -9,8 +9,8 @@ class DividendData(models.Model):
     code = models.CharField(max_length=4, help_text="公司代碼")
     year = models.IntegerField(help_text='年度')
     season = models.FloatField(help_text="季度")
-    distribute_date = models.DateField(help_text="發放日期")
-    ex_dividend_date = models.DateField(help_text="除權息日", default=date.today)
+    distribute_date = models.DateField(help_text="發放日期", null=True)
+    ex_dividend_date = models.DateField(help_text="除權息日", default=date.today, null=True)
     cash = models.FloatField(help_text="現金股利")
     stock = models.FloatField(help_text="股票股利")
 
