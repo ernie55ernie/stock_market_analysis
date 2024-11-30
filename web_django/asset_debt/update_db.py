@@ -1,5 +1,6 @@
 import argparse
 import requests
+import numpy as np
 import pandas as pd
 from .models import *
 
@@ -58,13 +59,17 @@ def crawl(year, season):
 def create_row(row, company_type, season):
     code = int(row['code'])
     if company_type == 'standard':
+        try:
+            noncurrent_debt = float(row['非流動負債'])
+        except ValueError:
+            noncurrent_debt = 0
         one_row = StandardAssetDebtData(code=code,
                                         season=season,
                                         current_assets=row['流動資產'],
                                         noncurrent_assets=row['非流動資產'],
                                         total_assets=row['資產總額'],
                                         current_debt=row['流動負債'],
-                                        noncurrent_debt=row['非流動負債'],
+                                        noncurrent_debt=noncurrent_debt,
                                         total_debt=row['負債總額'],
                                         total_equity=row['權益總額'],
                                         share_capital=row['股本'],
