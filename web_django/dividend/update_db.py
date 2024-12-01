@@ -55,6 +55,8 @@ def query_dividend(stock_code):
     df['season'] = df['season'].astype(float)
     return df
 
+def delete_data():
+    DividendData.objects.all().delete()
 
 def main():
     counter = 0
@@ -75,15 +77,22 @@ def main():
         else:
             latest_year = 101
             latest_season = 0
-        if (latest_year != df.iloc[0].year) or (latest_season !=
-                                                df.iloc[0].season):
-            cash = df.iloc[0].cash_dividend if isinstance(df.iloc[0].cash_dividend, float) else 0
-            stock = df.iloc[0].stock_dividend if isinstance(df.iloc[0].stock_dividend, float) else 0
+#         if (latest_year != df.iloc[0].year) or (latest_season !=
+#                                                 df.iloc[0].season):
+        for i in range(len(df)):
+            try:
+                cash = float(df.iloc[i].cash_dividend)
+            except:
+                cash = 0
+            try:
+                stock = float(df.iloc[i].stock_dividend)
+            except:
+                stock = 0
             row = DividendData(code=int(stock_code),
-                               year=df.iloc[0].year,
-                               season=df.iloc[0].season,
-                               distribute_date=df.iloc[0].distribute_date if df.iloc[0].distribute_date else None,
-                               ex_dividend_date=df.iloc[0].ex_dividend_date if df.iloc[0].ex_dividend_date else None,
+                               year=df.iloc[i].year,
+                               season=df.iloc[i].season,
+                               distribute_date=df.iloc[i].distribute_date if df.iloc[i].distribute_date else None,
+                               ex_dividend_date=df.iloc[i].ex_dividend_date if df.iloc[i].ex_dividend_date else None,
                                cash=cash,
                                stock=stock)
             row.save()
