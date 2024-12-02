@@ -16,10 +16,16 @@ Including another URLconf
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 from meta_data.views import main
 from meta_data.summary import get_tables
+from django.shortcuts import redirect
+
+# Define your custom fallback view
+def default_view(request):
+    # Redirect to your default path, e.g., 'index/'
+    return redirect('index')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,5 +43,7 @@ urlpatterns = [
     path(
         'css/styles.css',
         TemplateView.as_view(template_name='styles.css',
-                             content_type='text/css'))
+                             content_type='text/css')),
+    # Default route to catch unmatched URLs
+    re_path(r'^.*$', default_view),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
