@@ -37,8 +37,9 @@ def query_dividend(stock_code):
                     one_data.append(cells[i].text)
 
                 data.append(one_data)
-        except:
-            break
+        except Exception as e:
+            print(e)
+            continue
     df = pd.DataFrame(data)
     if not len(df):
         return df
