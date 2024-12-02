@@ -46,8 +46,8 @@ def create_dash(data):
     fig_bar.update_layout(
         xaxis={
             'tickmode': 'array',
-            'tickvals': [i * 12 for i in range(len(years))],
-            'ticktext': [f"{year}_1" for year in years]
+            'tickvals': [i for i in range(len(data['年月']))],
+            'ticktext': [f"{yearmonth.replace('_', '/')}" for yearmonth in data['年月']]
         })
     app.layout = html.Div([
         html.H3(children='月營收表', style={'text_align': 'center'}),

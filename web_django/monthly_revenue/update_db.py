@@ -33,11 +33,12 @@ def crawl(year, month):
 def create_row(row, year, month):
     code = int(row['code'])
     print(code)
+    month_increment = row['上月比較增減(%)'] if isinstance(row['上月比較增減(%)'], float) else 0
     one_row = RevenueData(code=code,
                           year=year,
                           month=month,
                           revenue=row['當月營收'],
-                          month_increment=row['上月比較增減(%)'],
+                          month_increment=month_increment,
                           year_increment=row['去年同月增減(%)'])
     one_row.save()
 
