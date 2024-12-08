@@ -11,13 +11,18 @@ table_dict = {
     'holdings': HoldingsProfitLossData,
     'bank': BankProfitLossData,
     'insurance': InsuranceProfitLossData,
-    'standard': StandardProfitLossData
+    'standard': StandardProfitLossData,
+    'other': OtherProfitLossData,
 }
 
 
 
 def get_raw_data(stock_id, company_type):
-    table = table_dict[company_type].objects.filter(code=stock_id)
+    # table = table_dict[company_type].objects.filter(code=stock_id)
+    for types in table_dict:
+        table = table_dict[types].objects.filter(code=stock_id)
+        if table:
+            break
     return create_df(table)
 
 
