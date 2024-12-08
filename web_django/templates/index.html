@@ -7,7 +7,7 @@
    <link rel="stylesheet" href="/css/styles.css" type="text/css"/>
     <style>
       .back {
-        background-image: url("{% static "background.jpeg"%}");
+        background-image: url("https://github.com/ernie55ernie/stock_market_analysis/blob/main/web_django/meta_data/static/background.jpeg?raw=true");
         background-repeat: no-repeat;
         background-size: cover;
         padding-top: 5%;
@@ -88,10 +88,10 @@
         var logo = document.getElementById('logo');  
         if (condition == 'smile'){
             logo.style.width = '28%';
-            logo.src = "{% static "logo_bird1.png" %}";}
+            logo.src = "https://github.com/ernie55ernie/stock_market_analysis/blob/main/web_django/meta_data/static/logo_bird1.png?raw=true";}
         else{
             logo.style.width = '20%';
-            logo.src = "{% static "logo_bird0.png" %}";}
+            logo.src = "https://github.com/ernie55ernie/stock_market_analysis/blob/main/web_django/meta_data/static/logo_bird0.png?raw=true";}
               
             }
   </script>
@@ -100,7 +100,7 @@
     <div style="height: 100%">
         <div class="flex back">
             <div class="flex" style="width: 50%; flex-direction: column">
-                <a href="/overview"><img id="logo" src="{% static "logo_bird0.png" %}"></img></a>
+                <a href="/overview"><img id="logo" src="https://github.com/ernie55ernie/stock_market_analysis/blob/main/web_django/meta_data/static/logo_bird0.png?raw=true"></img></a>
                 <div class="search">
                  <form action={% url 'price:posted_query' %} method="POST" target="_blank">
         <!--尋找name 為 price:posted_query 的這個url, post 給他 -->
