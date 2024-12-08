@@ -9,10 +9,14 @@ meta_data = StockMetaData.objects.all()
 
 
 def get_raw_data(stock_id, company_type):
-    if company_type in ['standard', 'other']:
-        table = StandardAssetDebtData.objects.filter(code=stock_id)
-    else:
-        table = NonStandardAssetDebtData.objects.filter(code=stock_id)
+#     if company_type in ['standard', 'other']:
+#         table = StandardAssetDebtData.objects.filter(code=stock_id)
+#     else:
+#         table = NonStandardAssetDebtData.objects.filter(code=stock_id)
+    for data in [StandardAssetDebtData, NonStandardAssetDebtData]:
+        table = data.objects.filter(code=stock_id)
+        if table:
+            break
     return create_df(table)
 
 
