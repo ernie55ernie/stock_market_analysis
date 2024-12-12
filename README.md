@@ -85,35 +85,38 @@ A UI to present stock data of listed market
 ```
 python manage.py shell
 from monthly_revenue.update_db import main
-main(103, 1)
+main(102, 1)~main(103, 11)
 ```
 
 ```
 from profit_loss.update_db import main
-main('add_data', 103, 1)
+main('add_data', 102, 1)~main('add_data', 103, 4)
 ```
 
 ```
 from asset_debt.update_db import main
-main('add_data', 103, 1)
+main('add_data', 102, 1)~main('add_data', 103, 4)
 ```
 
 ```
 from cashflow.update_db import main
-main('add_data', 103, 1)
+main('add_data', 103, 1)~main('add_data', 103, 4)
 ```
 
 ```
 from dividend.update_db import main
-main('add_data', 103, 1)
+main()
+```
+
+5.
+```
+python manage.py runserver ip:port
 ```
 
 ### Todo
 
-chip 籌碼分析
-monthly_revenue 月營收表
+metadata company_type
 profit_loss 損益表
 asset_debt 資產負債表
 cashflow 現金流量表
-dividend 股利政策
 similarity 相似性比較
