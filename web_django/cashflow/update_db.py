@@ -68,7 +68,7 @@ def main(action, year, season, start=0):
                 if stock.company_type in ['bank', 'holdings', 'insurance']:
                     data = crawl(year, season, id_, 2)
                 else:
-                    data = crawl(year, season, id_)
+                    data = crawl(year, season, id_, 2)
                 create_row(id_, data, f"{year}_{season}")
             except:
                 print(id_, ' failed')
