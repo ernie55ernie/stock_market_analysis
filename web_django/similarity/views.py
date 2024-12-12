@@ -95,12 +95,23 @@ def prepare_data(stock_code):
             i += 1
             continue
         try:
-            EPS = profit_loss_table_dict[company_type].objects.filter(
-                code=id_).order_by('-season')[0]
-            if company_type in ['standard', 'other']:
-                PBR = StandardAssetDebtData.objects.filter(code=id_)
-            else:
-                PBR = NonStandardAssetDebtData.objects.filter(code=id_)
+#             EPS = profit_loss_table_dict[company_type].objects.filter(
+#                 code=id_).order_by('-season')[0]
+            for key in profit_loss_table_dict:
+                EPS = profit_loss_table_dict[key].objects.filter(
+                    code=id_).order_by('-season')
+                if len(EPS) > 0:
+                    break
+            EPS = EPS[0]
+#             if company_type in ['standard', 'other']:
+#                 PBR = StandardAssetDebtData.objects.filter(code=id_)
+#             else:
+#                 PBR = NonStandardAssetDebtData.objects.filter(code=id_)
+#             PBR = PBR.order_by('-season')[0]
+            for sadd in [StandardAssetDebtData, NonStandardAssetDebtData]:
+                PBR = sadd.objects.filter(code=id_)
+                if len(PBR) > 0:
+                    break
             PBR = PBR.order_by('-season')[0]
             dividend = DividendData.objects.filter(code=id_).order_by('-year')
             data[id_] = {
@@ -112,7 +123,8 @@ def prepare_data(stock_code):
                 'pbr': PBR,
                 'dividend': dividend,
             }
-        except:
+        except Exception as e:
+            print(e)
             print(id_, ' failed')
         i += 1
 
