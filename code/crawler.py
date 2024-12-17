@@ -128,7 +128,7 @@ def get_stock_meta_data():
     df[['code', 'name']] = pd.DataFrame(code_and_name)
     df['company_type'] = 'standard'
 
-    return df[['code', 'name', 'listed_date', 'industry_type', 'company_type']].iloc[0:952]
+    return df[['code', 'name', 'listed_date', 'industry_type', 'company_type']].iloc[0:1012]
 
 
 def get_cashflow_table(year, previous=None):

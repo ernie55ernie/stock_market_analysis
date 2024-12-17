@@ -75,11 +75,14 @@ A UI to present stock data of listed market
 `python manage.py makemigrations asset_debt`
 `python manage.py makemigrations cashflow`
 `python manage.py makemigrations profit_loss`
-
+create sqlite database
 `python manage.py migrate`
 
 3. import csv to sqlite
-`.import stock_market_analysis/data_sample/stock_meta_data.csv(absolute path) meta_data_stockmetadata`
+```
+.mode csv
+.import -skip 1 stock_market_analysis/data_sample/stock_meta_data.csv(absolute path) meta_data_stockmetadata
+```
 
 4. 
 ```
