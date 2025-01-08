@@ -23,6 +23,7 @@ def download(stock_code):
     }
     url1 = f"https://concords.moneydj.com/z/zc/zcj/zcj_{stock_code}.djhtm"
     url2 = f"https://concords.moneydj.com/z/zc/zcm/zcm_{stock_code}.djhtm"
+    url3 = f"https://concords.moneydj.com/z/zc/zco/zco_{stock_code}.djhtm"
     res = requests.get(url1, headers=headers)
     soup = BeautifulSoup(res.text, "lxml")
     table = soup.select('table')[-1]
@@ -49,8 +50,32 @@ def download(stock_code):
             (total_amount - data['amount'].astype(int).sum()) / total_amount,
         },
         ignore_index=True)
-    return date, data, total_amount
-
+    # Fetch data from url3
+    res = requests.get(url3, headers=headers)
+    soup = BeautifulSoup(res.text, "lxml")
+    table = soup.find("table", {"id": "oMainTable"})
+    
+    # Extract data for "買超" and "賣超"
+    rows = table.find_all("tr")[3:]  # Skip header rows
+    buy_sell_data = []
+    for row in rows:
+        cells = row.find_all("td", class_=["t4t1", "t3n1"])
+        if len(cells) >= 10:
+            buy_sell_data.append({
+                "buy_broker": cells[0].text.strip(),
+                "buy_in": cells[1].text.strip(),
+                "buy_out": cells[2].text.strip(),
+                "buy_net": cells[3].text.strip(),
+                "buy_ratio": cells[4].text.strip(),
+                "sell_broker": cells[5].text.strip(),
+                "sell_in": cells[6].text.strip(),
+                "sell_out": cells[7].text.strip(),
+                "sell_net": cells[8].text.strip(),
+                "sell_ratio": cells[9].text.strip(),
+            })
+    
+    buy_sell_df = pd.DataFrame(buy_sell_data)
+    return date, data, total_amount, buy_sell_df
 
 def get_institutional(stock_code):
     institutional = institutional_data.filter(
@@ -70,7 +95,7 @@ def get_institutional(stock_code):
 def main(request, stock_id):
     info = meta_data.filter(code=stock_id)[0]
     same_trade = meta_data.filter(industry_type=info.industry_type)
-    date, chip_df, total = download(stock_id)
+    date, chip_df, total, buy_sell_df = download(stock_id)
     institution_df = get_institutional(stock_id)
     price = price_data.filter(code=stock_id).order_by('-date')
     price_df = create_price_sequence(price)
@@ -81,8 +106,9 @@ def main(request, stock_id):
     data['same_trade'] = same_trade
     data['stock_list'] = meta_data
     data['stock_info'] = info
-    app = create_dash(chip_df, institution_df, price_df)
+    app = create_dash(chip_df, institution_df, price_df, buy_sell_df)
     print(date)
     print(chip_df)
+    print(buy_sell_df)
     print(total)
     return render(request, 'chip_dashboard.html', context=data)
