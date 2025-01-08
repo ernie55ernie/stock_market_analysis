@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from django.http import HttpResponse
 from dashboard_utils.common_functions import *
 from .models import *
 from meta_data.models import StockMetaData
@@ -29,7 +29,10 @@ def get_raw_data(stock_id, company_type):
 def main(request, stock_id):
     info = meta_data.filter(code=stock_id)[0]
     same_trade = meta_data.filter(industry_type=info.industry_type)
-    df = get_raw_data(stock_id, info.company_type).astype(float)
+    try:
+        df = get_raw_data(stock_id, info.company_type).astype(float)
+    except:
+        return HttpResponse('此公司在公開資訊觀測站上沒有損益表資料 :/')
     #    print('------ before ------')
     #    print(df)
     df = transform_by_season(df)

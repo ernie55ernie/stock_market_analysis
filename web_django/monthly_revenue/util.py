@@ -26,6 +26,10 @@ def query_month_avg_price(stock_code, start_month, end_month):
 
 def create_dash(data):
     app = DjangoDash('MonthlyRevenue_Dashboard')
+    if len(data['公司代碼'].values) < 1:
+        app.layout = html.Div([html.H3(children='此公司在公開資訊觀測站上沒有月營收資料:/')],
+                              style=layout_style)
+        return
     stock_code = data['公司代碼'].values[0]
     df = data.drop(columns=['公司代碼'])
     data['年月'] = df['年'].astype(str) + '_' + df['月'].astype(str)

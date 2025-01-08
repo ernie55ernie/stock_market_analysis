@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from django.shortcuts import render
+from django.http import HttpResponse
 
 from meta_data.models import StockMetaData
 from price.models import PriceData
@@ -145,5 +146,8 @@ def main(request, stock_id):
     data['stock_list'] = meta_data
     data['same_trade'] = same_trade
     data_for_dash = prepare_data(stock_id)
-    app = create_dash(stock_id, data_for_dash)
+    try:
+        app = create_dash(stock_id, data_for_dash)
+    except:
+        return HttpResponse('此公司沒有相似性比較 :/')
     return render(request, 'similarity_dashboard.html', context=data)
