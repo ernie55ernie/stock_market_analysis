@@ -1,5 +1,5 @@
 from django.shortcuts import render
-
+from django.http import HttpResponse
 from dashboard_utils.common_functions import *
 from .models import CashflowData
 from meta_data.models import StockMetaData
@@ -16,7 +16,10 @@ def get_raw_data(stock_id):
 def main(request, stock_id):
     info = meta_data.filter(code=stock_id)[0]
     same_trade = meta_data.filter(industry_type=info.industry_type)
-    df = get_raw_data(stock_id).astype(float)
+    try:
+        df = get_raw_data(stock_id).astype(float)
+    except:
+        return HttpResponse('此公司在公開資訊觀測站上沒有現金流量表資料 :/')
     df = transform_by_season(df)
     #    listed_year = int(info.listed_date[0:4]) - 1911
     #    if listed_year >= int(df.iloc[0]['season'][0:3]):  # 上市日期早於最早紀錄的那年
