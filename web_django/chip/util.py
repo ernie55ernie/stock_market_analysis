@@ -39,44 +39,71 @@ def create_dash(chip_data, institutional_df, price_df, buy_sell_df):
                                            marker_color='gray'),
                                 secondary_y=True)
 
-    # Create table for buy and sell data
-    buy_sell_table = html.Table(
-        # Table Header
-        [html.Tr([
-            html.Th("買超券商"),
-            html.Th("買進"),
-            html.Th("賣出"),
-            html.Th("買超"),
-            html.Th("佔成交比重"),
-            html.Th("賣超券商"),
-            html.Th("買進"),
-            html.Th("賣出"),
-            html.Th("賣超"),
-            html.Th("佔成交比重")
-        ])] +
-        # Table Body
-        [
-            html.Tr([
-                html.Td(row['buy_broker']),
-                html.Td(row['buy_in']),
-                html.Td(row['buy_out']),
-                html.Td(row['buy_net']),
-                html.Td(row['buy_ratio']),
-                html.Td(row['sell_broker']),
-                html.Td(row['sell_in']),
-                html.Td(row['sell_out']),
-                html.Td(row['sell_net']),
-                html.Td(row['sell_ratio'])
-            ]) for _, row in buy_sell_df.iterrows()
-        ],
-        style={
-            'width': '100%',
-            'margin': '20px auto',
-            'border': '1px solid black',
-            'borderCollapse': 'collapse',
-            'textAlign': 'center'
-        }
-    )
+    # Create table with horizontal bars starting from the center
+    max_value = max(buy_sell_df['buy_net'].astype(int).max(), buy_sell_df['sell_net'].astype(int).max())
+    buy_sell_table = html.Div([
+        html.Table(
+            # Table Header
+            [
+                html.Tr([
+                    html.Th("買超券商", style={'text-align': 'center'}),
+                    html.Th("買超張數", style={'text-align': 'center'}),
+                    html.Th("賣超張數", style={'text-align': 'center'}),
+                    html.Th("賣超券商", style={'text-align': 'center'}),
+                ])
+            ] +
+            # Table Body
+            [
+                html.Tr([
+                    # Buy Broker Name
+                    html.Td(row['buy_broker'], style={'text-align': 'center', 'color': 'red'}),
+                    
+                    # Buy Net Bar
+                    html.Td(
+                        html.Div([
+                            html.Span(row['buy_net'], style={'color': 'black', 'margin-right': '5px'}),
+                            html.Div(
+                                style={
+                                    'background-color': '#fdd',
+                                    'height': '20px',
+                                    'width': f"{(int(row['buy_net']) / max_value) * 100}%",
+                                    'display': 'inline-block',
+                                }
+                            )
+                        ], style={'display': 'flex', 'justify-content': 'flex-end'}),
+                        style={'width': '25%', 'text-align': 'center'}
+                    ),
+                    
+                    # Sell Net Bar
+                    html.Td(
+                        html.Div([
+                            html.Div(
+                                style={
+                                    'background-color': '#dfd',
+                                    'height': '20px',
+                                    'width': f"{(int(row['sell_net']) / max_value) * 100}%",
+                                    'display': 'inline-block',
+                                }
+                            ),
+                            html.Span(row['sell_net'], style={'color': 'black', 'margin-left': '5px'})
+                        ], style={'display': 'flex', 'justify-content': 'flex-start'}),
+                        style={'width': '25%', 'text-align': 'center'}
+                    ),
+                    
+                    # Sell Broker Name
+                    html.Td(row['sell_broker'], style={'text-align': 'center', 'color': 'green'}),
+                ], style={'text-align': 'center'}) for _, row in buy_sell_df.iterrows()
+            ],
+            style={
+                'width': '100%',
+                'border-collapse': 'collapse',
+                'margin': '20px auto',
+                'font-family': 'Arial, sans-serif',
+                'font-size': '14px',
+                'border': '1px solid #ddd',
+            }
+        )
+    ])
 
     # Dash App Layout
     app = DjangoDash('Chip_Dashboard')
