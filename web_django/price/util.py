@@ -11,15 +11,14 @@ from dash.dependencies import Input, Output
 from dashboard_utils.common_styles import checklist_style, line_plot_style
 
 
-def query_historical_price(stock_code, end_date):
+def query_historical_price(stock_code, end_date, period=14):
     end = datetime.strptime(end_date, '%Y-%m-%d')
     end = int(time.mktime(time.strptime(end_date, '%Y-%m-%d'))) + 86400
     start = end - 86400 * 365 * 5
     print('stock_code: ', stock_code, 'end date: ', end_date)
     start_date = time.strftime('%Y-%m-%d', time.localtime(start))
-    data = yf.download(f"{stock_code}.TW", start=start_date, end=end_date)[[
-        'Open', 'High', 'Low', 'Close', 'Volume'
-    ]]
+    data = yf.download(f"{stock_code}.TW", start=start_date, end=end_date)
+    data = data[['Open', 'High', 'Low', 'Close', 'Volume']]
     data['Date'] = data.index.astype(str)
     data = data.reset_index(drop=True)
     data = data[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
@@ -27,8 +26,15 @@ def query_historical_price(stock_code, end_date):
     data['5MA'] = data.daily.rolling(5).mean()
     data['20MA'] = data.daily.rolling(20).mean()
     data['60MA'] = data.daily.rolling(60).mean()
+    """Calculate the Stochastic Oscillator (K and D values)."""
+    data['low_min'] = data['low'].rolling(window=period).min()
+    data['high_max'] = data['high'].rolling(window=period).max()
+    data['%K'] = ((data['daily'] - data['low_min']) /
+                  (data['high_max'] - data['low_min'])) * 100
+    data['%D'] = data['%K'].rolling(window=3).mean()
+    data['%K'] = data['%K'].fillna(0).replace([float('inf'), -float('inf')], 0)
+    data['%D'] = data['%D'].fillna(0).replace([float('inf'), -float('inf')], 0)
     return data
-
 
 def create_dash(stock_code, company_name, price_df):
     features = ['daily', '5MA', '20MA', '60MA', 'k線']
@@ -45,9 +51,11 @@ def create_dash(stock_code, company_name, price_df):
                     'label': features[i],
                     'value': i
                 } for i in range(len(features))],
-                value=[i for i in range(len(features) - 1)],  # 預設沒有k線
+                value=[i for i in range(len(features))],  # 預設沒有k線
                 style=checklist_style),
             dcc.Graph(id='line_plot', style=line_plot_style),
+            dcc.Graph(id='stochastic_plot',
+                  style={'width': '100%', 'height': '300px', 'text-align': 'center'}),
             dcc.Graph(id='bar_chart',
                       style={
                           'width': '100%',
@@ -183,4 +191,36 @@ def create_dash(stock_code, company_name, price_df):
                           yaxis_title='成交量(千股)')
         return fig
 
+    @app.callback(Output('stochastic_plot', 'figure'), [Input('slider', 'value')])
+    def update_stochastic_plot(date_range):
+        selected_data = price_df.iloc[date_range[0]:date_range[1] + 1]
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(
+                x=selected_data['date'],
+                y=selected_data['%K'],
+                mode='lines',
+                name='%K',
+                marker_color='blue'
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=selected_data['date'],
+                y=selected_data['%D'],
+                mode='lines',
+                name='%D',
+                marker_color='orange'
+            )
+        )
+        fig.update_layout(title={
+            'y': 0.9,
+            'x': 0.45,
+            'xanchor': 'center',
+            'yanchor': 'top',
+        },
+        yaxis_title='Stochastic Oscillator',
+        xaxis_title='Date')
+        return fig
+    
     return app
