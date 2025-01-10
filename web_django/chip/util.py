@@ -148,35 +148,69 @@ def create_dash(chip_data, institutional_df, price_df, buy_sell_df, broker_data_
                   }),
         html.H3(children="買超與賣超明細", style={'text-align': 'center'}),
         buy_sell_table,
+        html.Div(id='broker-graph', style={'display': 'none', 'marginBottom': '20px'}),  # Placeholder for the broker graph
         html.Div(id='broker-detail-table', style={'margin-top': '20px'}),
     ])
 
     # Callbacks
     @app.callback(
-        Output('broker-detail-table', 'children'),
+        [Output('broker-graph', 'children'),
+         Output('broker-graph', 'style'),
+         Output('broker-detail-table', 'children')],
         [Input({'type': 'broker-name', 'index': ALL, 'action': ALL}, 'n_clicks')],
         prevent_initial_call=True
     )
-    def update_broker_table(n_clicks):
+    def update_broker_graph(n_clicks):
         ctx = dash.callback_context
         if not ctx.triggered:
-            return ""
+            return dash.no_update, {'display': 'none'}, ''
         trigger = ctx.triggered[0]['prop_id'].split('.')[0]
         broker_name = eval(trigger)['index']
 
-        # Get data for clicked broker
         if broker_name in broker_data_map:
             broker_df = broker_data_map[broker_name]
-            return html.Div([
+            price_broker_df = broker_df.sort_values(by='日期')
+            bar_colors = ['red' if value > 0 else 'green' for value in price_broker_df['買賣超(張)'].astype(int)]
+            # Create the graph
+            fig = make_subplots(specs=[[{'secondary_y': True}]])
+            fig.add_trace(
+                go.Scatter(
+                    x=price_broker_df['日期'],
+                    y=price_df['close'],  # Stock price
+                    name="股價",
+                    mode='lines+markers',
+                    marker_color='blue'
+                ),
+                secondary_y=True
+            )
+            fig.add_trace(
+                go.Bar(
+                    x=price_broker_df['日期'],
+                    y=price_broker_df['買賣超(張)'].astype(int),  # Buy-sell net
+                    name="買賣超",
+                    marker_color=bar_colors
+                ),
+                secondary_y=False
+            )
+            fig.update_layout(
+                title=f"{broker_name} 買賣超及股價",
+                yaxis_title="買賣超",
+                yaxis2_title="股價",
+                xaxis_title="日期",
+                margin=dict(t=30, b=10),
+                height=400
+            )
+            
+            # Create broker detail table
+            table = html.Div([
                 html.H4(f"進出明細表 - {broker_name}", style={'text-align': 'center'}),
                 dcc.Graph(
                     id='broker-detail',
                     figure={
-                        'data': [{
-                            'type': 'table',
-                            'header': {'values': list(broker_df.columns)},
-                            'cells': {'values': [broker_df[col] for col in broker_df.columns]},
-                        }],
+                        'data': [go.Table(
+                            header=dict(values=list(broker_df.columns)),
+                            cells=dict(values=[broker_df[col] for col in broker_df.columns])
+                        )],
                         'layout': {
                             'autosize': True,
                             'margin': {'l': 10, 'r': 10, 't': 10, 'b': 10},
@@ -184,6 +218,9 @@ def create_dash(chip_data, institutional_df, price_df, buy_sell_df, broker_data_
                     }
                 )
             ])
-        return ""
+
+            return dcc.Graph(figure=fig), {'display': 'block'}, table
+
+        return dash.no_update, {'display': 'none'}, ''
 
     return app
