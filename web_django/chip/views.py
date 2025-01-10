@@ -65,12 +65,12 @@ def download(stock_code):
                 "buy_broker": cells[0].text.strip(),
                 "buy_in": cells[1].text.strip(),
                 "buy_out": cells[2].text.strip(),
-                "buy_net": cells[3].text.strip(),
+                "buy_net": cells[3].text.strip().replace(',', ''),
                 "buy_ratio": cells[4].text.strip(),
                 "sell_broker": cells[5].text.strip(),
                 "sell_in": cells[6].text.strip(),
                 "sell_out": cells[7].text.strip(),
-                "sell_net": cells[8].text.strip(),
+                "sell_net": cells[8].text.strip().replace(',', ''),
                 "sell_ratio": cells[9].text.strip(),
             })
     
