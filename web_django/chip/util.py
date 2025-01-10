@@ -1,16 +1,18 @@
 import plotly.graph_objects as go
-from dash import dcc
-from dash import html
+import dash
+from dash import dcc, html, Input, Output
+from dash.dependencies import ALL
 from django_plotly_dash import DjangoDash
 from plotly.subplots import make_subplots
+import pandas as pd
 
 
-def create_dash(chip_data, institutional_df, price_df, buy_sell_df):
+def create_dash(chip_data, institutional_df, price_df, buy_sell_df, broker_data_map):
     pie_chart_color = [
         'cornflowerblue', 'lightcoral', 'mediumaquamarine', 'mediumpurple',
         'gold', 'lightsteelblue', 'sandybrown'
     ]
-    
+
     # Pie Chart for chip data
     fig_pie = go.Figure(data=[
         go.Pie(labels=['董監', '外資', '投信', '自營商', '融資', '融券', '其他'],
@@ -39,7 +41,7 @@ def create_dash(chip_data, institutional_df, price_df, buy_sell_df):
                                            marker_color='gray'),
                                 secondary_y=True)
 
-    # Create table with horizontal bars starting from the center
+    # Table with horizontal bars for buy/sell data
     max_value = max(buy_sell_df['buy_net'].astype(int).max(), buy_sell_df['sell_net'].astype(int).max())
     buy_sell_table = html.Div([
         html.Table(
@@ -55,8 +57,16 @@ def create_dash(chip_data, institutional_df, price_df, buy_sell_df):
             # Table Body
             [
                 html.Tr([
-                    # Buy Broker Name
-                    html.Td(row['buy_broker'], style={'text-align': 'center', 'color': 'red'}),
+                    # Buy Broker Name (clickable)
+                    html.Td(
+                        html.A(
+                            row['buy_broker'],
+                            href="javascript:void(0);",  # Prevent default behavior
+                            id={'type': 'broker-name', 'index': row['buy_broker'], 'action': 'buy'},
+                            style={'color': 'red', 'cursor': 'pointer'}
+                        ),
+                        style={'text-align': 'center'}
+                    ),
                     
                     # Buy Net Bar
                     html.Td(
@@ -90,8 +100,16 @@ def create_dash(chip_data, institutional_df, price_df, buy_sell_df):
                         style={'width': '25%', 'text-align': 'center'}
                     ),
                     
-                    # Sell Broker Name
-                    html.Td(row['sell_broker'], style={'text-align': 'center', 'color': 'green'}),
+                    # Sell Broker Name (clickable)
+                    html.Td(
+                        html.A(
+                            row['sell_broker'],
+                            href="javascript:void(0);",  # Prevent default behavior
+                            id={'type': 'broker-name', 'index': row['sell_broker'], 'action': 'sell'},
+                            style={'color': 'green', 'cursor': 'pointer'}
+                        ),
+                        style={'text-align': 'center'}
+                    ),
                 ], style={'text-align': 'center'}) for _, row in buy_sell_df.iterrows()
             ],
             style={
@@ -105,8 +123,10 @@ def create_dash(chip_data, institutional_df, price_df, buy_sell_df):
         )
     ])
 
-    # Dash App Layout
+    # Dash App
     app = DjangoDash('Chip_Dashboard')
+
+    # Layout
     app.layout = html.Div([
         html.H3(children="籌碼分布", style={'text-align': 'center'}),
         dcc.Graph(id='pie_chart',
@@ -127,5 +147,43 @@ def create_dash(chip_data, institutional_df, price_df, buy_sell_df):
                       'marginLeft': '5%'
                   }),
         html.H3(children="買超與賣超明細", style={'text-align': 'center'}),
-        buy_sell_table
+        buy_sell_table,
+        html.Div(id='broker-detail-table', style={'margin-top': '20px'}),
     ])
+
+    # Callbacks
+    @app.callback(
+        Output('broker-detail-table', 'children'),
+        [Input({'type': 'broker-name', 'index': ALL, 'action': ALL}, 'n_clicks')],
+        prevent_initial_call=True
+    )
+    def update_broker_table(n_clicks):
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            return ""
+        trigger = ctx.triggered[0]['prop_id'].split('.')[0]
+        broker_name = eval(trigger)['index']
+
+        # Get data for clicked broker
+        if broker_name in broker_data_map:
+            broker_df = broker_data_map[broker_name]
+            return html.Div([
+                html.H4(f"進出明細表 - {broker_name}", style={'text-align': 'center'}),
+                dcc.Graph(
+                    id='broker-detail',
+                    figure={
+                        'data': [{
+                            'type': 'table',
+                            'header': {'values': list(broker_df.columns)},
+                            'cells': {'values': [broker_df[col] for col in broker_df.columns]},
+                        }],
+                        'layout': {
+                            'autosize': True,
+                            'margin': {'l': 10, 'r': 10, 't': 10, 'b': 10},
+                        }
+                    }
+                )
+            ])
+        return ""
+
+    return app

@@ -61,21 +61,55 @@ def download(stock_code):
     for row in rows:
         cells = row.find_all("td", class_=["t4t1", "t3n1"])
         if len(cells) >= 10:
+            buy_broker_href = cells[0].find("a")["href"] if cells[0].find("a") else None
+            sell_broker_href = cells[5].find("a")["href"] if cells[5].find("a") else None
             buy_sell_data.append({
                 "buy_broker": cells[0].text.strip(),
                 "buy_in": cells[1].text.strip(),
                 "buy_out": cells[2].text.strip(),
                 "buy_net": cells[3].text.strip().replace(',', ''),
+                "buy_href": f"https://concords.moneydj.com{buy_broker_href}" if buy_broker_href else None,
                 "buy_ratio": cells[4].text.strip(),
                 "sell_broker": cells[5].text.strip(),
                 "sell_in": cells[6].text.strip(),
                 "sell_out": cells[7].text.strip(),
                 "sell_net": cells[8].text.strip().replace(',', ''),
+                "sell_href": f"https://concords.moneydj.com{sell_broker_href}" if sell_broker_href else None,
                 "sell_ratio": cells[9].text.strip(),
             })
     
     buy_sell_df = pd.DataFrame(buy_sell_data)
-    return date, data, total_amount, buy_sell_df
+    
+    # Map to store broker data
+    broker_data_map = {}
+
+    # Crawl "進出明細表" for each broker
+    for _, row in buy_sell_df.iterrows():
+        for broker_type in ["buy", "sell"]:
+            broker_name = row[f"{broker_type}_broker"]
+            broker_href = row[f"{broker_type}_href"]
+
+            if broker_href and broker_name not in broker_data_map:
+                res = requests.get(broker_href, headers=headers)
+                soup = BeautifulSoup(res.text, "lxml")
+                detail_table = soup.find("table", {"id": "oMainTable"})
+
+                if detail_table:
+                    detail_rows = detail_table.find_all("tr")[1:]  # Skip header row
+                    details = []
+                    for detail_row in detail_rows:
+                        detail_cells = detail_row.find_all("td")
+                        if len(detail_cells) >= 5:
+                            details.append({
+                                "日期": detail_cells[0].text.strip(),
+                                "買進(張)": detail_cells[1].text.strip().replace(',', ''),
+                                "賣出(張)": detail_cells[2].text.strip().replace(',', ''),
+                                "買賣總額(張)": detail_cells[3].text.strip().replace(',', ''),
+                                "買賣超(張)": detail_cells[4].text.strip().replace(',', '')
+                            })
+
+                    broker_data_map[broker_name] = pd.DataFrame(details)
+    return date, data, total_amount, buy_sell_df, broker_data_map
 
 def get_institutional(stock_code):
     institutional = institutional_data.filter(
@@ -95,7 +129,7 @@ def get_institutional(stock_code):
 def main(request, stock_id):
     info = meta_data.filter(code=stock_id)[0]
     same_trade = meta_data.filter(industry_type=info.industry_type)
-    date, chip_df, total, buy_sell_df = download(stock_id)
+    date, chip_df, total, buy_sell_df, broker_data_map = download(stock_id)
     institution_df = get_institutional(stock_id)
     price = price_data.filter(code=stock_id).order_by('-date')
     price_df = create_price_sequence(price)
@@ -106,7 +140,7 @@ def main(request, stock_id):
     data['same_trade'] = same_trade
     data['stock_list'] = meta_data
     data['stock_info'] = info
-    app = create_dash(chip_df, institution_df, price_df, buy_sell_df)
+    app = create_dash(chip_df, institution_df, price_df, buy_sell_df, broker_data_map)
     print(date)
     print(chip_df)
     print(buy_sell_df)
