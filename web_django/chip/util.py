@@ -41,7 +41,8 @@ def create_dash(chip_data, institutional_df, price_df, buy_sell_df, broker_data_
                                            marker_color='gray'),
                                 secondary_y=True)
 
-    # Table with horizontal bars for buy/sell data
+    buy_sell_df = buy_sell_df.replace('', None)  # Replace '' with None (missing value)
+    buy_sell_df = buy_sell_df.dropna(subset=['buy_net', 'sell_net'])  # Drop rows where these columns have missing values
     max_value = max(buy_sell_df['buy_net'].astype(int).max(), buy_sell_df['sell_net'].astype(int).max())
     buy_sell_table = html.Div([
         html.Table(
