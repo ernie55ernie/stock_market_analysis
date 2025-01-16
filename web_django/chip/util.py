@@ -7,7 +7,7 @@ from plotly.subplots import make_subplots
 import pandas as pd
 
 
-def create_dash(chip_data, institutional_df, price_df, buy_sell_df, broker_data_map):
+def create_dash(chip_data, institutional_df, price_df, last_update, buy_sell_df, broker_data_map):
     pie_chart_color = [
         'cornflowerblue', 'lightcoral', 'mediumaquamarine', 'mediumpurple',
         'gold', 'lightsteelblue', 'sandybrown'
@@ -147,7 +147,20 @@ def create_dash(chip_data, institutional_df, price_df, buy_sell_df, broker_data_
                       'width': '90%',
                       'marginLeft': '5%'
                   }),
-        html.H3(children="買超與賣超明細", style={'text-align': 'center'}),
+        html.Div([
+            html.H3("券商分點進出明細", style={'text-align': 'center'}),
+            html.Div(
+                f"最後更新日: {last_update}",
+                style={
+                    'text-align': 'right',
+                    'font-size': '12px',
+                    'color': 'gray',
+                    'margin-top': '-10px',
+                    'margin-bottom': '10px',
+                    'margin-right': '5%'
+                }
+            )
+        ]),
         buy_sell_table,
         html.Div(id='broker-graph', style={'display': 'none', 'marginBottom': '20px'}),  # Placeholder for the broker graph
         html.Div(id='broker-detail-table', style={'margin-top': '20px'}),

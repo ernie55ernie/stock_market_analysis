@@ -53,6 +53,9 @@ def download(stock_code):
     # Fetch data from url3
     res = requests.get(url3, headers=headers)
     soup = BeautifulSoup(res.text, "lxml")
+    
+    # Extract "最後更新日"
+    last_update = soup.find("div", class_="t11").text.split("：")[-1].strip()
     table = soup.find("table", {"id": "oMainTable"})
     
     # Extract data for "買超" and "賣超"
@@ -109,7 +112,7 @@ def download(stock_code):
                             })
 
                     broker_data_map[broker_name] = pd.DataFrame(details)
-    return date, data, total_amount, buy_sell_df, broker_data_map
+    return date, data, total_amount, last_update, buy_sell_df, broker_data_map
 
 def get_institutional(stock_code):
     institutional = institutional_data.filter(
@@ -129,7 +132,7 @@ def get_institutional(stock_code):
 def main(request, stock_id):
     info = meta_data.filter(code=stock_id)[0]
     same_trade = meta_data.filter(industry_type=info.industry_type)
-    date, chip_df, total, buy_sell_df, broker_data_map = download(stock_id)
+    date, chip_df, total, last_update, buy_sell_df, broker_data_map = download(stock_id)
     institution_df = get_institutional(stock_id)
     price = price_data.filter(code=stock_id).order_by('-date')
     price_df = create_price_sequence(price)
@@ -140,7 +143,7 @@ def main(request, stock_id):
     data['same_trade'] = same_trade
     data['stock_list'] = meta_data
     data['stock_info'] = info
-    app = create_dash(chip_df, institution_df, price_df, buy_sell_df, broker_data_map)
+    app = create_dash(chip_df, institution_df, price_df, last_update, buy_sell_df, broker_data_map)
     print(date)
     print(chip_df)
     print(buy_sell_df)
