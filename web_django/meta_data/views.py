@@ -2,6 +2,7 @@ import os
 import sys
 import pandas as pd
 import yfinance as yf
+import fear_and_greed
 from django.shortcuts import render
 from datetime import datetime, timedelta
 
@@ -33,13 +34,18 @@ def get_latest_data():  # 即時爬取大盤資料
     data['Date'] = data.index.astype(str)
     data = data.reset_index(drop=True)
     print(data)
+    # Retrieve the current Fear and Greed Index
+    index = fear_and_greed.get()
     return {
         'date': data['Date'].iloc[-1],
         'yesterday_close': round(data['Close'].iloc[-2], 2),
         'today_close': round(data['Close'].iloc[-1], 2),
         'low': round(data['Low'].iloc[-1], 2),
         'high': round(data['High'].iloc[-1], 2),
-        'open': round(data['Open'].iloc[1], 2)
+        'open': round(data['Open'].iloc[1], 2),
+        'value': round(index.value),
+        'description': index.description,
+        'last_updated': index.last_update,
     }
 
 '''

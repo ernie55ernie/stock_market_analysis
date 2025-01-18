@@ -68,8 +68,8 @@ def download_stock_price(datestr):  # 下載某天股價
 
 
 def download_institutional_investor(date):
-    # 下載某天三大法人 # 20241118
-    #time.sleep(30)
+    # 下載某天三大法人
+    time.sleep(5)
     r = requests.get('https://www.twse.com.tw/rwd/zh/fund/T86?date=' +
                      date + '&selectType=ALL&response=csv')
     try:

@@ -9,3 +9,4 @@ requests==2.25.1
 yfinance==0.1.63
 jupyter-dash
 dj-static
+fear-and-greed
