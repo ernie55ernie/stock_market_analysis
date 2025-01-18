@@ -117,19 +117,22 @@ def get_stock_meta_data():
     print('downloading data from website')
     res = requests.get("https://isin.twse.com.tw/isin/C_public.jsp?strMode=2")
     print('creating dataframe')
-    df = pd.read_html(res.text)[0][[0, 2, 4]]
-    df = df.drop([0, 1]).dropna().reset_index(drop=True)
-    df.columns = ['full_name', 'listed_date', 'industry_type']
-    code_and_name = []
-    for name in df.full_name:
-        rename = name.replace('\u3000', ' ').split(' ')
-        code_and_name.append(rename)
+    df = pd.read_html(res.text)[0]
+    df.columns = [
+        'full_name', 'isin_code', 'listed_date', 'market_type', 'industry_type', 'cfic_code', 'remarks'
+    ]
+    stock_start = df[df['full_name'].str.contains('股票', na=False)].index[0] + 1
+    stock_end = df[df['full_name'].str.contains('上市認購\(售\)權證', na=False)].index[0]
+    stock_df = df.iloc[stock_start:stock_end]
+    stock_df = stock_df[['full_name', 'listed_date', 'industry_type']].dropna().reset_index(drop=True)
+    
+    code_and_name = stock_df['full_name'].str.replace('\u3000', ' ', regex=True).str.split(' ', expand=True)
+    stock_df['code'] = code_and_name[0]
+    stock_df['name'] = code_and_name[1]
 
-    df[['code', 'name']] = pd.DataFrame(code_and_name)
-    df['company_type'] = 'standard'
+    stock_df['company_type'] = 'standard'
 
-    return df[['code', 'name', 'listed_date', 'industry_type', 'company_type']].iloc[0:1012]
-
+    return stock_df[['code', 'name', 'listed_date', 'industry_type', 'company_type']]
 
 def get_cashflow_table(year, previous=None):
     stocks = pd.read_csv('../data_sample/stock_meta_data.csv')
