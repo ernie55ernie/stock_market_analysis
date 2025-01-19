@@ -7,6 +7,7 @@ class StockMetaData(models.Model):
     code = models.CharField(max_length=4, primary_key=True, help_text='公司代碼')
     name = models.CharField(max_length=10, help_text='公司名稱')
     listed_date = models.CharField(max_length=10, help_text='上市日期')
+    market_type = models.CharField(max_length=20, help_text='市場類別')
     industry_type = models.CharField(max_length=20, help_text='產業類別')
     company_type = models.CharField(
         max_length=20, help_text='bank/standard/insurance/holdings/other')
@@ -20,6 +21,7 @@ class StockMetaData(models.Model):
             'code': '公司代碼',
             'name': '公司名稱',
             'listed_date': '上市日期',
+            'market_type': '市場類別',
             'industry_type': '產業類別',
             'company_type': '公司屬性'
         }

@@ -115,24 +115,47 @@ def save(filename, target):
 
 def get_stock_meta_data():
     print('downloading data from website')
-    res = requests.get("https://isin.twse.com.tw/isin/C_public.jsp?strMode=2")
-    print('creating dataframe')
-    df = pd.read_html(res.text)[0]
-    df.columns = [
+    # Request data for strMode=2
+    res_2 = requests.get("https://isin.twse.com.tw/isin/C_public.jsp?strMode=2")
+    print('creating dataframe for strMode=2')
+    df_2 = pd.read_html(res_2.text)[0]
+    df_2.columns = [
         'full_name', 'isin_code', 'listed_date', 'market_type', 'industry_type', 'cfic_code', 'remarks'
     ]
-    stock_start = df[df['full_name'].str.contains('股票', na=False)].index[0] + 1
-    stock_end = df[df['full_name'].str.contains('上市認購\(售\)權證', na=False)].index[0]
-    stock_df = df.iloc[stock_start:stock_end]
-    stock_df = stock_df[['full_name', 'listed_date', 'industry_type']].dropna().reset_index(drop=True)
-    
-    code_and_name = stock_df['full_name'].str.replace('\u3000', ' ', regex=True).str.split(' ', expand=True)
-    stock_df['code'] = code_and_name[0]
-    stock_df['name'] = code_and_name[1]
+    stock_start_2 = df_2[df_2['full_name'].str.contains('股票', na=False)].index[0] + 1
+    stock_end_2 = df_2[df_2['full_name'].str.contains('上市認購\(售\)權證', na=False)].index[0]
+    stock_df_2 = df_2.iloc[stock_start_2:stock_end_2]
+    stock_df_2 = stock_df_2[['full_name', 'market_type', 'listed_date', 'industry_type']].dropna().reset_index(drop=True)
 
-    stock_df['company_type'] = 'standard'
+    code_and_name_2 = stock_df_2['full_name'].str.replace('\u3000', ' ', regex=True).str.split(' ', expand=True)
+    stock_df_2['code'] = code_and_name_2[0]
+    stock_df_2['name'] = code_and_name_2[1]
 
-    return stock_df[['code', 'name', 'listed_date', 'industry_type', 'company_type']]
+    stock_df_2['company_type'] = 'standard'
+
+    print('downloading data from website for strMode=4')
+    # Request data for strMode=4
+    res_4 = requests.get("https://isin.twse.com.tw/isin/C_public.jsp?strMode=4")
+    print('creating dataframe for strMode=4')
+    df_4 = pd.read_html(res_4.text)[0]
+    df_4.columns = [
+        'full_name', 'isin_code', 'listed_date', 'market_type', 'industry_type', 'cfic_code', 'remarks'
+    ]
+    stock_start_4 = df_4[df_4['full_name'].str.contains('股票', na=False)].index[0] + 1
+    stock_end_4 = df_4[df_4['full_name'].str.contains('特別股', na=False)].index[0]
+    stock_df_4 = df_4.iloc[stock_start_4:stock_end_4]
+    stock_df_4 = stock_df_4[['full_name', 'market_type', 'listed_date', 'industry_type']].dropna().reset_index(drop=True)
+
+    code_and_name_4 = stock_df_4['full_name'].str.replace('\u3000', ' ', regex=True).str.split(' ', expand=True)
+    stock_df_4['code'] = code_and_name_4[0]
+    stock_df_4['name'] = code_and_name_4[1]
+
+    stock_df_4['company_type'] = 'standard'
+
+    # Combine results from both requests
+    combined_df = pd.concat([stock_df_2, stock_df_4], ignore_index=True)
+
+    return combined_df[['code', 'name', 'listed_date', 'market_type', 'industry_type', 'company_type']]
 
 def get_cashflow_table(year, previous=None):
     stocks = pd.read_csv('../data_sample/stock_meta_data.csv')
