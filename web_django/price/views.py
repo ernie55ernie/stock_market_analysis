@@ -51,14 +51,14 @@ def color(price1, price2):  #price2: 昨收
         return 'white', 'black'
 
 
-def get_price(stock_id, today, price_data):
+def get_price(stock_id, market_type, today, price_data):
     global stock_code
     global history
     stock_code = stock_id
     end_date = datetime.strptime(today, '%Y-%m-%d') + timedelta(days=1)
     end_date = datetime.strftime(end_date, '%Y-%m-%d')
     #print(stock_code)
-    history = query_historical_price(stock_code, end_date)
+    history = query_historical_price(stock_code, market_type, end_date)
     #print(history.iloc[-10:])
     today_stock_price = price_data.filter(code=stock_id)[0]
     print(today_stock_price.date)
@@ -108,7 +108,7 @@ def main(request, stock_id):
     same_trade_price_data = price_data.filter(
         code__in=[stock.code for stock in same_trade]).filter(date=today)
     same_trade_PE_mean = np.mean([stock.PE for stock in same_trade_price_data])
-    data = get_price(stock_id, today, price_data)
+    data = get_price(stock_id, info.market_type, today, price_data)
     app = create_dash(stock_code, info.name, history)
 
     data['stock_id'] = f"{stock_id} {info.name}"

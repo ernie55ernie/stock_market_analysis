@@ -11,13 +11,16 @@ from dash.dependencies import Input, Output
 from dashboard_utils.common_styles import checklist_style, line_plot_style
 
 
-def query_historical_price(stock_code, end_date, period=14):
+def query_historical_price(stock_code, market_type, end_date, period=14):
     end = datetime.strptime(end_date, '%Y-%m-%d')
     end = int(time.mktime(time.strptime(end_date, '%Y-%m-%d'))) + 86400
     start = end - 86400 * 365 * 5
     print('stock_code: ', stock_code, 'end date: ', end_date)
     start_date = time.strftime('%Y-%m-%d', time.localtime(start))
-    data = yf.download(f"{stock_code}.TW", start=start_date, end=end_date)
+    if market_type == '上市':
+        data = yf.download(f"{stock_code}.TW", start=start_date, end=end_date)
+    elif market_type == '上櫃':
+        data = yf.download(f"{stock_code}.TWO", start=start_date, end=end_date)
     data = data[['Open', 'High', 'Low', 'Close', 'Volume']]
     data['Date'] = data.index.astype(str)
     data = data.reset_index(drop=True)
