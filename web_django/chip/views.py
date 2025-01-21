@@ -45,9 +45,9 @@ def download(stock_code):
             'term':
             '其他',
             'amount':
-            total_amount - data['amount'].astype(int).sum(),
+            total_amount - data['amount'].astype(float).sum(),
             'ratio':
-            (total_amount - data['amount'].astype(int).sum()) / total_amount,
+            (total_amount - data['amount'].astype(float).sum()) / total_amount,
         },
         ignore_index=True)
     # Fetch data from url3
