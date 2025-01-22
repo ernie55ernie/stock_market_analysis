@@ -59,40 +59,38 @@ def download_stock_price(datestr):  # 下載某天股價
         # stock_codes = [c.split(' ')[0] for c in get_stocks()]
         # df = df[df['code'].isin(stock_codes)].reset_index(drop=True)
         df = df.reset_index(drop=True)
-        converted_df = {}
+        listed_df = {}
         for col in df.columns:
-            converted_df[col] = df[col].apply(convert)
-        converted_df = pd.DataFrame(converted_df).dropna().reset_index(drop=True)
+            listed_df[col] = df[col].apply(convert)
+        listed_df = pd.DataFrame(listed_df).dropna().reset_index(drop=True)
     else:
         print(datestr, 'no data')
         return
 
-    date = datetime.strptime(datestr, '%Y%m%d')
-    roc_year = date.year - 1911
-    formatted_date = f"{roc_year}/{date.month:02d}/{date.day:02d}"
+    date_obj = datetime.strptime(datestr, '%Y%m%d')
 
-    url = f"https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes?l=zh-tw&d={formatted_date}&s=0,asc,0"
+    url = f"https://www.tpex.org.tw/www/zh-tw/afterTrading/dailyQuotes?date={date_obj.year}/{date_obj.month:02d}/{date_obj.day:02d}&id=&response=csv"
 
     response = requests.get(url)
     if response.status_code == 200:
-        data = response.json()
-        if data:
-            df = pd.DataFrame(data)
-            df = df[['SecuritiesCompanyCode', 'Open', 'High', 'Low', 'Close', 'TradingShares']]
-            df.columns = ['code', 'Open', 'High', 'Low', 'Close', 'Volume']
-            df = df[df['code'].str.len() <= 4]
-            df['Open'] = pd.to_numeric(df['Open'], errors='coerce')
-            df['High'] = pd.to_numeric(df['High'], errors='coerce')
-            df['Low'] = pd.to_numeric(df['Low'], errors='coerce')
-            df['Close'] = pd.to_numeric(df['Close'], errors='coerce')
-            df['Volume'] = pd.to_numeric(df['Volume'].str.replace(',', ''), errors='coerce')
-            df['PE'] = 0
-            df = df.dropna().reset_index(drop=True)
-            combined = pd.concat([converted_df, df], axis=0).reset_index(drop=True)
-            return combined
-        else:
-            print(f"{datestr} no data")
-            return None
+        # Read the CSV data
+        otc_df = pd.read_csv(
+            StringIO(response.text),  # Parse the text response
+            skiprows=2,              # Skip the first two rows
+            header=0                 # Use the third row as header
+        )
+        otc_df = otc_df[['代號', '開盤', '最高', '最低', '收盤', '成交股數']]
+        otc_df.columns = ['code', 'Open', 'High', 'Low', 'Close', 'Volume']
+        otc_df = otc_df[otc_df['code'].str.len() <= 4]
+        otc_df['Open'] = pd.to_numeric(otc_df['Open'], errors='coerce')
+        otc_df['High'] = pd.to_numeric(otc_df['High'], errors='coerce')
+        otc_df['Low'] = pd.to_numeric(otc_df['Low'], errors='coerce')
+        otc_df['Close'] = pd.to_numeric(otc_df['Close'], errors='coerce')
+        otc_df['Volume'] = pd.to_numeric(otc_df['Volume'].str.replace(',', ''), errors='coerce')
+        otc_df['PE'] = 0
+        otc_df = otc_df.dropna().reset_index(drop=True)
+        combined = pd.concat([listed_df, otc_df], axis=0).reset_index(drop=True)
+        return combined
     else:
         print(f"Request fail, statue code：{response.status_code}")
         return None
@@ -129,31 +127,39 @@ def download_institutional_investor(date):
         'code', 'foreign_buy', 'foreign_sell', 'dealer_buy', 'dealer_sell',
         'invest_buy', 'invest_sell'
     ]
-    df = df[df['code'].str.len() <= 4]
+    listed_df = df[df['code'].str.len() <= 4]
     
     date_obj = datetime.strptime(date, '%Y%m%d')
-    roc_year = date_obj.year - 1911
-    formatted_date = f"{roc_year}/{date_obj.month:02d}/{date_obj.day:02d}"
-
-    url = f"https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading?l=zh-tw&d={formatted_date}&s=0,asc,0"
-
+    
+    url = f"https://www.tpex.org.tw/www/zh-tw/insti/dailyTrade?type=Daily&sect=EW&date={date_obj.year}/{date_obj.month:02d}/{date_obj.day:02d}&id=&response=csv"
+    
     response = requests.get(url)
     if response.status_code == 200:
-        data = response.json()
-        if data:
-            otc_df = pd.DataFrame(data)
-            otc_df = otc_df[['SecuritiesCompanyCode', 'Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Total Buy', ' Foreign Investors include Mainland Area Investors (Foreign Dealers excluded)-Total Sell', 'Dealers-TotalBuy', 'Dealers-TotalSell', 'SecuritiesInvestmentTrustCompanies-TotalBuy', 'SecuritiesInvestmentTrustCompanies-TotalSell']]
-            otc_df.columns = ['code', 'foreign_buy', 'foreign_sell', 'dealer_buy', 'dealer_sell', 'invest_buy', 'invest_sell']
-            otc_df = otc_df[otc_df['code'].str.len() <= 4]
-            otc_df['foreign_buy'] = pd.to_numeric(otc_df['foreign_buy'], errors='coerce')
-            otc_df['foreign_sell'] = pd.to_numeric(otc_df['foreign_sell'], errors='coerce')
-            otc_df['dealer_buy'] = pd.to_numeric(otc_df['dealer_buy'], errors='coerce')
-            otc_df['dealer_sell'] = pd.to_numeric(otc_df['dealer_sell'], errors='coerce')
-            otc_df['invest_buy'] = pd.to_numeric(otc_df['invest_buy'], errors='coerce')
-            otc_df['invest_sell'] = pd.to_numeric(otc_df['invest_sell'], errors='coerce')
-            otc_df = otc_df.dropna().reset_index(drop=True)
-            combined = pd.concat([df, otc_df], axis=0).reset_index(drop=True)
-            return combined
+        otc_df = pd.read_csv(StringIO(response.text),
+                         header=1).dropna(how='all', axis=1).dropna(how='any')
+        
+        # Select and preprocess relevant columns
+        otc_df['外資及陸資(不含外資自營商)-買進股數'] = otc_df['外資及陸資(不含外資自營商)-買進股數'].apply(preprocess)
+        otc_df['外資及陸資(不含外資自營商)-賣出股數'] = otc_df['外資及陸資(不含外資自營商)-賣出股數'].apply(preprocess)
+        otc_df['自營商-買進股數'] = otc_df['自營商(自行買賣)-買進股數'].apply(preprocess) + otc_df['自營商(避險)-買進股數'].apply(preprocess)
+        otc_df['自營商-賣出股數'] = otc_df['自營商(自行買賣)-賣出股數'].apply(preprocess) + otc_df['自營商(避險)-賣出股數'].apply(preprocess)
+        otc_df['投信-買進股數'] = otc_df['投信-買進股數'].apply(preprocess)
+        otc_df['投信-賣出股數'] = otc_df['投信-賣出股數'].apply(preprocess)
+
+        # Select final columns
+        otc_df = otc_df[[
+            '代號', '外資及陸資(不含外資自營商)-買進股數', '外資及陸資(不含外資自營商)-賣出股數',
+            '自營商-買進股數', '自營商-賣出股數', '投信-買進股數', '投信-賣出股數'
+        ]]
+
+        # Rename columns
+        otc_df.columns = [
+            'code', 'foreign_buy', 'foreign_sell', 'dealer_buy', 'dealer_sell',
+            'invest_buy', 'invest_sell'
+        ]
+        otc_df = otc_df[otc_df['code'].str.len() <= 4]
+        combined = pd.concat([listed_df, otc_df], axis=0).reset_index(drop=True)
+        return combined
     return None
 
 
