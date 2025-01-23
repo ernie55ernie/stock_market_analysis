@@ -84,7 +84,7 @@ def prepare_data(stock_code):
     data = {}
     i = 0
     #    for i in sorted_df.index:
-    while len(data) < 11:
+    while len(data) < 11 and i < len(sorted_df.stock_id):
         id_ = sorted_df.stock_id.iloc[i]
         print(i, id_)
         corr = sorted_df['corr'].iloc[i]
