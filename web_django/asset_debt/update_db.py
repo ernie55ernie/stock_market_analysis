@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from .models import *
 
+# https://mops.twse.com.tw/mops/web/t163sb05
 url = 'https://mops.twse.com.tw/mops/web/ajax_t163sb05'
 
 company_columns = {
@@ -22,7 +23,12 @@ company_columns_renames['standard'] = company_columns_renames[
 
 company_type = {1: 'bank', 3: 'standard', 4: 'holdings', 5: 'insurance'}
 
+# 上櫃
+# 流動資產	非流動資產	資產合計	流動負債	非流動負債	負債合計	股本	資本公積	保留盈餘（或累積虧損）	其他權益	庫藏股票	歸屬於母公司業主權益合計	共同控制下前手權益	合併前非屬共同控制股權	權益合計	待註銷股本股數（單位：股）	預收股款（權益項下）之約當發行股數（單位：股）	母公司暨子公司持有之母公司庫藏股股數（單位：股）	每股參考淨值
+# 流動資產	非流動資產	資產總額	流動負債	非流動負債	負債總額	股本	資本公積	保留盈餘	其他權益	庫藏股票	歸屬於母公司業主之權益合計	共同控制下前手權益	合併前非屬共同控制股權	非控制權益	權益總額	待註銷股本股數（單位：股）	預收股款（權益項下）之約當發行股數（單位：股）	母公司暨子公司所持有之母公司庫藏股股數（單位：股）	每股參考淨值
+# 流動資產	非流動資產	資產總額	流動負債	非流動負債	負債總額	股本	資本公積	保留盈餘	其他權益	庫藏股票	歸屬於母公司業主之權益合計	共同控制下前手權益	非控制權益	權益總額	待註銷股本股數（單位：股）	預收股款（權益項下）之約當發行股數（單位：股）	母公司暨子公司所持有之母公司庫藏股股數（單位：股）	每股參考淨值
 
+# TODO: valid after 102, 1, before use https://mops.twse.com.tw/mops/web/ajax_t51sb12
 def crawl(year, season):
     dfs = {}
     form = {
