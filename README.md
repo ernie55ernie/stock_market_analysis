@@ -75,13 +75,16 @@ A UI to present stock data of listed market
 `python manage.py makemigrations asset_debt`
 `python manage.py makemigrations cashflow`
 `python manage.py makemigrations profit_loss`
+`python manage.py makemigrations chip`
 create sqlite database
 `python manage.py migrate`
 
 3. import csv to sqlite
 ```
+sqlite3 db.sqlite3
 .mode csv
 .import -skip 1 stock_market_analysis/data_sample/stock_meta_data.csv(absolute path) meta_data_stockmetadata
+.quit
 ```
 
 4. 
@@ -111,6 +114,11 @@ from dividend.update_db import main
 main()
 ```
 
+```
+from chip.update_db import update_broker_data
+update_broker_data('stock_market_analysis/data_sample/broker_branch_data.csv'(absolute path))
+```
+
 5.
 ```
 python manage.py runserver ip:port
@@ -118,7 +126,7 @@ python manage.py runserver ip:port
 
 ### Todo
 
-metadata company_type
+metadata company_type download_new_listing delete_delisting
 profit_loss 損益表
 asset_debt 資產負債表
 cashflow 現金流量表
