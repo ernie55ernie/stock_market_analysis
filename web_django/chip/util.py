@@ -42,7 +42,7 @@ def create_dash(chip_data, institutional_df, price_df, last_update, buy_sell_df,
                                 secondary_y=True)
 
     buy_sell_df = buy_sell_df.replace('', None)  # Replace '' with None (missing value)
-    buy_sell_df = buy_sell_df.dropna(subset=['buy_net', 'sell_net'])  # Drop rows where these columns have missing values
+    #buy_sell_df = buy_sell_df.dropna(subset=['buy_net', 'sell_net'])  # Drop rows where these columns have missing values
     max_value = max(buy_sell_df['buy_net'].astype(int).max(), buy_sell_df['sell_net'].astype(int).max())
     buy_sell_table = html.Div([
         html.Table(
@@ -183,6 +183,7 @@ def create_dash(chip_data, institutional_df, price_df, last_update, buy_sell_df,
 
         if broker_name in broker_data_map:
             broker_df = broker_data_map[broker_name]
+            
             price_broker_df = broker_df.sort_values(by='日期')
             bar_colors = ['red' if value > 0 else 'green' for value in price_broker_df['買賣超(張)'].astype(int)]
             # Create the graph
