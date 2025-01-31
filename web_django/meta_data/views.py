@@ -38,11 +38,11 @@ def get_latest_data():  # 即時爬取大盤資料
     index = fear_and_greed.get()
     return {
         'date': data['Date'].iloc[-1],
-        'yesterday_close': round(data['Close'].iloc[-2], 2),
+        'yesterday_close': round((data['Close'].iloc[-2] if len(data['Close']) > 1 else 0), 2),
         'today_close': round(data['Close'].iloc[-1], 2),
         'low': round(data['Low'].iloc[-1], 2),
         'high': round(data['High'].iloc[-1], 2),
-        'open': round(data['Open'].iloc[1], 2),
+        'open': round((data['Open'].iloc[1] if len(data['Open']) > 1 else 0), 2),
         'value': round(index.value),
         'description': index.description,
         'last_updated': index.last_update,
@@ -241,13 +241,11 @@ def main(request):
     print('-' * 10, 'downloading latest data')
     data = get_latest_data()
     download_punishment(data['date'].replace('-', ''))
-    if datetime.now().time().hour >= 14 or datetime.now().time(
-    ).hour <= 9:  # 每天兩點以後更新股價
+    if datetime.now().time().hour >= 14 or datetime.now().time().hour <= 9:  # 每天兩點以後更新股價
         print('-' * 10, 'updating stock price')
         update_data(datetime.strptime(data['date'], '%Y-%m-%d'), 0)
 
-    if datetime.now().time().hour >= 17 or datetime.now().time(
-    ).hour <= 9:  # 每天五點以後更新三大法人
+    if datetime.now().time().hour >= 17 or datetime.now().time().hour <= 9:  # 每天五點以後更新三大法人
         print('-' * 10, 'updating institutional transaction data')
         update_data(datetime.strptime(data['date'], '%Y-%m-%d'), 1)
     if data['today_close'] > data['yesterday_close']:
