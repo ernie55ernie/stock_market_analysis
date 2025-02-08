@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 # from .models import StockMetaData
 from price.models import PriceData, InstitutionalInvestorData
 
-from .util import ROOT, get_stocks, get_meta_data, download_stock_price, download_institutional_investor, download_punishment
+from .util import ROOT, get_stocks, get_meta_data, download_stock_price, download_institutional_investor, download_punishment, create_dash
 from .update_db import update_price_table, update_institutional_table
 
 # root = Path(__file__).resolve().parent
@@ -263,4 +263,5 @@ def main(request):
     print(data)
     #   print(stocks[0])
     data['stock_list'] = stocks
+    app = create_dash(data['value'])
     return render(request, 'index.html', context=data)

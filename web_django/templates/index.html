@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% load static %}
+{% load static %} {% load plotly_dash %}
 <html>
     <head>
         <title>財報鳥</title>
@@ -21,7 +21,7 @@
             .content {
             display: flex;
             justify-content: space-around;
-            width: 30%; /*寬度會和back一樣*/
+            width: 50%; /*寬度會和back一樣*/
             margin: 1% 2%;
             font-weight: bold;
             }
@@ -44,7 +44,8 @@
             }
             .search_button {
             height: 100%;
-            width: 10%;
+            width: 15%;
+            min-width: 50px;
             border: none;
             border-radius: 5px;
             background-color: skyblue;
@@ -98,94 +99,99 @@
     <body style="min-height: 600px;">
         <div style="height: 100%">
             <div class="flex back">
-                <div class="flex" style="width: 50%; flex-direction: column">
-                    <a href="/overview"><img id="logo" src="https://github.com/ernie55ernie/stock_market_analysis/blob/main/web_django/meta_data/static/logo_bird0.png?raw=true"></img></a>
-                    <div class="search">
-                        <form action={% url 'price:posted_query' %} method="POST" target="_blank">
-                        <!--尋找name 為 price:posted_query 的這個url, post 給他 -->
-                        <!--<form action="/analysis/" method="POST">-->
-                        {% csrf_token %}
-                        <input
-                            class="search_bar"
-                            type="text"
-                            name="stock_id"
-                            id="stock_code"
-                            placeholder="查詢台股代碼/公司名稱"
-                            list="query"
-                            style="font-size: 100%;"
-                            />
-                        <!--<li style="width: 8%">-->
-                        <button class="search_button" type="submit"><i class="fa fa-search"></i></button>
-                        <datalist id="query">
-                            {% for stock_name in stock_list %}
-                            <option value="{{stock_name}}">
-                                {% endfor %}
-                        </datalist>
-                        </form>
+                <div class="flex" style="flex-direction: row">
+                    <div class="flex" style="width: 25%">
+                        <!--             <iframe frameborder="0" width="830" height="580" scrolling="yes" src="https://rili-d.jin10.com/open.php?fontSize=14px&scrolling=yes&theme=primary"></iframe> -->
+                        <!-- TradingView Widget BEGIN -->
+                        <div class="tradingview-widget-container">
+                            <div class="tradingview-widget-container__widget"></div>
+                            <div class="tradingview-widget-copyright"><a href="https://tw.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">追蹤TradingView上的所有市場</span></a></div>
+                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
+                               {
+                               "colorTheme": "light",
+                               "isTransparent": false,
+                               "width": "300",
+                               "height": "500",
+                               "locale": "zh_TW",
+                               "importanceFilter": "-1,0,1",
+                               "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu"
+                               }
+                            </script>
+                        </div>
+                        <!-- TradingView Widget END -->
+            <!--             <iframe src="https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&features=datepicker,timezone&countries=37,46,6,110,14,48,32,17,10,36,43,35,72,22,41,25,12,5,4,26,178,11,39,42&calType=week&timeZone=28&lang=6" width="650" height="467" frameborder="0" allowtransparency="true" marginwidth="0" marginheight="0"></iframe><div class="poweredBy" style="font-family: Arial, Helvetica, sans-serif;"><span style="font-size: 11px;color: #333333;text-decoration: none;"><a href="https://cn.investing.com/economic-calendar/" target="_blank" boundblank="">财经日历</a>工具由<a href="https://cn.investing.com/" rel="nofollow" target="_blank" style="font-size: 11px;color: #06529D; font-weight: bold;" class="underline_link" boundblank="">英为财情</a>Investing.com提供</span></div> -->
+            <!--             <div id="economicCalendarWidget"></div>
+                        <script async type="text/javascript" data-type="calendar-widget" src="https://www.tradays.com/c/js/widgets/calendar/widget.js?v=13">
+                            {"width":800,"height":600,"mode":"2","lang":"zh"}
+                        </script> -->
+                        <!--          https://finance.yahoo.com/calendar/economic -->
+                        <!--          https://www.fxstreet.hk/economic-calendar -->
+                    </div>
+                    <div class="flex" style="width: 50%; flex-direction: column">
+                        <a href="/overview"><img id="logo" src="https://github.com/ernie55ernie/stock_market_analysis/blob/main/web_django/meta_data/static/logo_bird0.png?raw=true"/></a>
+                        <div class="search">
+                            <form action={% url 'price:posted_query' %} method="POST" target="_blank">
+                            <!--尋找name 為 price:posted_query 的這個url, post 給他 -->
+                            <!--<form action="/analysis/" method="POST">-->
+                            {% csrf_token %}
+                            <input
+                                class="search_bar"
+                                type="text"
+                                name="stock_id"
+                                id="stock_code"
+                                placeholder="查詢台股代碼/公司名稱"
+                                list="query"
+                                style="font-size: 100%;"
+                                />
+                            <!--<li style="width: 8%">-->
+                            <button class="search_button" type="submit"><i class="fa fa-search"></i></button>
+                            <datalist id="query">
+                                {% for stock_name in stock_list %}
+                                <option value="{{stock_name}}">
+                                    {% endfor %}
+                            </datalist>
+                            </form>
+                        </div>
+                        <div class="content">
+                           <div class='item2 mid_size_font'>{{date}}</div>
+                           <div class='item2 mid_size_font'><font color="{{trend}}">{{today_close}}</font></div>
+                        </div>
+                        <div class="content">
+                           <div id=square class="big_size_font" style="background-color:{{trend_background}}"><font color:"black">大盤<br>行情</font></div>
+                        </div>
+                        <div class="grid">
+                           <div>
+                              <p>昨收</p>
+                              <p>{{yesterday_close}}</p>
+                           </div>
+                           <div>
+                              <p>開盤</p>
+                              <p>{{open}}</p>
+                           </div>
+                           <div>
+                              <p>最高</p>
+                              <p>{{high}}</p>
+                           </div>
+                           <div>
+                              <p>最低</p>
+                              <p>{{low}}</p>
+                           </div>
+                        </div>
+                    </div>
+                    <div class="flex" style="width: 25%; flex-direction: column">
+                        <div id="dashboard" style="width: 100%;">
+                            {% plotly_app name="FearGreedMeter" ratio=1 %}
+                        </div>
+                        <!-- Add the Fear and Greed Index SVG below -->
+                        <div class="flex" style="justify-content: center; align-items: center; margin-top: 20px;">
+                            <div style="text-align: center; margin-top: 10px;">
+                                <p>現在情緒: <span id="fng-description">{{ description }}</span></p>
+                                <p>最後更新時間: <span id="fng-timestamp">{{ last_updated }}</span></p>
+                            </div>
+                        </div>
+<!--                         <img src="https://alternative.me/crypto/fear-and-greed-index.png" alt="Latest Crypto Fear & Greed Index" /> -->
                     </div>
                 </div>
-            </div>
-            <div class="flex" style="flex-direction: column">
-            <div class="content">
-            <div class='item2 mid_size_font'>{{date}}</div>
-            <div class='item2 mid_size_font'><font color="{{trend}}">{{today_close}}</font></div>
-            </div>
-            <div class="content">
-            <div>
-            <div id=square class="big_size_font" style="background-color:{{trend_background}}"><font color:"black">大盤<br>行情</font></div>
-            </div>
-            <div class="grid">
-            <div>
-            <p>昨收</p>
-            <p>{{yesterday_close}}</p>
-            </div>
-            <div>
-            <p>開盤</p>
-            <p>{{open}}</p>
-            </div>
-            <div>
-            <p>最高</p>
-            <p>{{high}}</p>
-            </div>
-            <div>
-            <p>最低</p>
-            <p>{{low}}</p>
-            </div>
-            </div>
-            </div>
-            <iframe frameborder="0" width="830" height="580" scrolling="yes" src="https://rili-d.jin10.com/open.php?fontSize=14px&scrolling=yes&theme=primary"></iframe>
-            <!-- TradingView Widget BEGIN -->
-<!--             <div class="tradingview-widget-container">
-                <div class="tradingview-widget-container__widget"></div>
-                <div class="tradingview-widget-copyright"><a href="https://tw.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">追蹤TradingView上的所有市場</span></a></div>
-                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
-                   {
-                   "colorTheme": "light",
-                   "isTransparent": false,
-                   "width": "400",
-                   "height": "550",
-                   "locale": "zh_TW",
-                   "importanceFilter": "-1,0,1",
-                   "countryFilter": "ar,au,br,ca,cn,fr,de,in,id,it,jp,kr,mx,ru,sa,za,tr,gb,us,eu"
-                   }
-                </script>
-            </div> -->
-            <!-- TradingView Widget END -->
-<!--             <iframe src="https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&features=datepicker,timezone&countries=37,46,6,110,14,48,32,17,10,36,43,35,72,22,41,25,12,5,4,26,178,11,39,42&calType=week&timeZone=28&lang=6" width="650" height="467" frameborder="0" allowtransparency="true" marginwidth="0" marginheight="0"></iframe><div class="poweredBy" style="font-family: Arial, Helvetica, sans-serif;"><span style="font-size: 11px;color: #333333;text-decoration: none;"><a href="https://cn.investing.com/economic-calendar/" target="_blank" boundblank="">财经日历</a>工具由<a href="https://cn.investing.com/" rel="nofollow" target="_blank" style="font-size: 11px;color: #06529D; font-weight: bold;" class="underline_link" boundblank="">英为财情</a>Investing.com提供</span></div> -->
-<!--             <div id="economicCalendarWidget"></div>
-            <script async type="text/javascript" data-type="calendar-widget" src="https://www.tradays.com/c/js/widgets/calendar/widget.js?v=13">
-                {"width":800,"height":600,"mode":"2","lang":"zh"}
-            </script> -->
-            <!--          https://finance.yahoo.com/calendar/economic -->
-            <!--          https://www.fxstreet.hk/economic-calendar -->
-            <!-- Add the Fear and Greed Index SVG below -->
-            <div class="flex" style="justify-content: center; align-items: center; margin-top: 20px;">
-            <div style="text-align: center; margin-top: 10px;">
-            <p>CNN恐懼與貪婪指數: <span id="fng-value">{{ value }}</span></p>
-            <p>現在情緒: <span id="fng-description">{{ description }}</span></p>
-            <p>最後更新時間: <span id="fng-timestamp">{{ last_updated }}</span></p>
-            </div>
-            </div>
             </div>
         </div>
     </body>

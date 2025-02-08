@@ -11,6 +11,12 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from .models import StockMetaData
 
+import dash
+from dash import dcc, html
+import plotly.graph_objects as go
+from dash.dependencies import Input, Output
+from django_plotly_dash import DjangoDash
+
 ROOT = Path(__file__).resolve().parent
 
 def get_meta_data():
@@ -222,4 +228,33 @@ def download_delisting(date):
     df = pd.DataFrame(data['data'], columns=data['fields'])[['上市編號', '公司名稱', '終止上市日期']]
     return df
 
-        
+
+def create_dash(value):
+    app = DjangoDash('FearGreedMeter', external_stylesheets=['https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css'])
+
+    categories = ["Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"]
+    colors = ["#FF4D17", "#FF8D18", "#FDB737", "#AEB335", "#4CB43C"]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Indicator(
+        mode="gauge+number",
+        title="CNN恐懼與貪婪指數",
+        value=value,
+        gauge={
+            'axis': {'range': [0, 100]},
+            'bar': {'color': "black"},
+            'steps': [
+                {'range': [0, 24], 'color': colors[0]},
+                {'range': [25, 44], 'color': colors[1]},
+                {'range': [45, 55], 'color': colors[2]},
+                {'range': [56, 75], 'color': colors[3]},
+                {'range': [76, 100], 'color': colors[4]},
+            ]
+        }
+    ))
+
+    app.layout = html.Div([
+        dcc.Graph(figure=fig),
+    ], style={'backgroundColor': 'rgba(0,0,0,0)'})
+    return app
