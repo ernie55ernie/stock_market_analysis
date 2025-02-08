@@ -55,16 +55,16 @@ def create_dash(stock_code, company_name, price_df):
                     'value': i
                 } for i in range(len(features))],
                 value=[i for i in range(len(features))],  # 預設沒有k線
-                style=checklist_style),
+                style={'display': 'flex', 'flex-wrap': 'wrap'}),
             dcc.Graph(id='line_plot', style=line_plot_style),
-            dcc.Graph(id='stochastic_plot',
-                  style={'width': '100%', 'height': '300px', 'text-align': 'center'}),
             dcc.Graph(id='bar_chart',
                       style={
                           'width': '100%',
                           'height': '300px',
                           'text-align': 'center'
                       }),
+            dcc.Graph(id='stochastic_plot',
+                      style={'width': '100%', 'height': '300px', 'text-align': 'center'}),
             dcc.RangeSlider(id='slider',
                             min=0,
                             max=len(price_df) - 1,
