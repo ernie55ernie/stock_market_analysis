@@ -6,7 +6,6 @@ from django.db.models import Sum
 from django.shortcuts import render
 from meta_data.models import StockMetaData
 from price.models import PriceData, InstitutionalInvestorData
-from chip.models import BrokerData
 from .util import create_dash
 from dashboard_utils.common_functions import create_price_sequence
 
@@ -132,78 +131,15 @@ def get_institutional(stock_code):
     df['dealer'] = df['dealer_buy'] - df['dealer_sell']
     return df[['date', 'foreign', 'invest', 'dealer']]
 
-def get_broker(stock_code):
-    # Calculate the last updated day from BrokerData
-    last_update_record = BrokerData.objects.filter(code=stock_code).order_by('-date').first()
-    if not last_update_record:
-        return None, None, None
-
-    last_update = last_update_record.date.strftime('%Y/%m/%d')
-
-    # Calculate buy_sell_df (top 15 buy net and sell net brokers on the last update day)
-    last_day_data = BrokerData.objects.filter(code=stock_code, date=last_update_record.date)
-
-    # Aggregate buy and sell data
-    buy_sell_agg = last_day_data.values('broker_branch').annotate(
-        buy_net=Sum('buy') - Sum('sell'),
-        buy_total=Sum('buy'),
-        sell_total=Sum('sell')
-    )
-
-    # Fetch the top 15 buy and top 15 sell separately
-    top_buy = buy_sell_agg.order_by('-buy_net')[:15]  # Top 15 by buy net
-    top_sell = buy_sell_agg.order_by('buy_net')[:15]  # Top 15 by sell net
-
-    # Convert QuerySets to DataFrames
-    top_buy_df = pd.DataFrame(list(top_buy))
-    top_buy_df.rename(columns={'broker_branch': 'buy_broker'}, inplace=True)
-    top_sell_df = pd.DataFrame(list(top_sell))
-    top_sell_df['buy_net'] = - top_sell_df['buy_net']
-    top_sell_df.rename(columns={'broker_branch': 'sell_broker', 'buy_net': 'sell_net'}, inplace=True)
-
-    # Combine by column (axis=1)
-    buy_sell_df = pd.concat([top_buy_df, top_sell_df], axis=1)
-    
-    # Fetch all relevant records in a single query
-    recent_data = BrokerData.objects.filter(code=stock_code).order_by('broker_branch', '-date').values(
-        'broker_branch', 'date', 'buy', 'sell', 'total', 'net'
-    )
-
-    # Create an empty dictionary to store broker-specific data
-    broker_data_map = {}
-
-    # Process the data in-memory
-    broker_groups = {}
-    for record in recent_data:
-        broker = record['broker_branch']
-        if broker not in broker_groups:
-            broker_groups[broker] = []
-        broker_groups[broker].append(record)
-
-    # Limit to the last 20 records for each broker and convert to DataFrame
-    for broker, records in broker_groups.items():
-        broker_df = pd.DataFrame(records[:20])  # Take the first 60 records
-        broker_df.rename(columns={
-            'date': '日期',
-            'buy': '買進(張)',
-            'sell': '賣出(張)',
-            'total': '買賣總額(張)',
-            'net': '買賣超(張)'
-        }, inplace=True)
-        broker_df.drop(columns='broker_branch', inplace=True)
-        broker_data_map[broker] = broker_df
-
-    return last_update, buy_sell_df, broker_data_map
-
 
 def main(request, stock_id):
     info = meta_data.filter(code=stock_id)[0]
     same_trade = meta_data.filter(industry_type=info.industry_type)
     date, chip_df, total = download(stock_id)
-    last_update, buy_sell_df, broker_data_map = get_broker(stock_id)
     institution_df = get_institutional(stock_id)
     price = price_data.filter(code=stock_id).order_by('-date')
     price_df = create_price_sequence(price)
+    print(price_df)
     data = {}
     data['stock_id'] = f"{stock_id} {info.name}"
     data['listed_date'] = info.listed_date
@@ -211,9 +147,8 @@ def main(request, stock_id):
     data['same_trade'] = same_trade
     data['stock_list'] = meta_data
     data['stock_info'] = info
-    app = create_dash(chip_df, institution_df, price_df, last_update, buy_sell_df, broker_data_map)
+    app = create_dash(chip_df, institution_df, price_df, stock_id)
     print(date)
     print(chip_df)
-    print(buy_sell_df)
     print(total)
     return render(request, 'chip_dashboard.html', context=data)
