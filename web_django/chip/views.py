@@ -139,7 +139,6 @@ def main(request, stock_id):
     institution_df = get_institutional(stock_id)
     price = price_data.filter(code=stock_id).order_by('-date')
     price_df = create_price_sequence(price)
-    print(price_df)
     data = {}
     data['stock_id'] = f"{stock_id} {info.name}"
     data['listed_date'] = info.listed_date
@@ -148,7 +147,5 @@ def main(request, stock_id):
     data['stock_list'] = meta_data
     data['stock_info'] = info
     app = create_dash(chip_df, institution_df, price_df, stock_id)
-    print(date)
-    print(chip_df)
-    print(total)
+    
     return render(request, 'chip_dashboard.html', context=data)

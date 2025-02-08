@@ -69,12 +69,14 @@ def fetch_broker_details(broker_href, period):
             if len(detail_cells) >= 5:
                 details.append({
                     "日期": detail_cells[0].text.strip(),
+                    "買進(張)": detail_cells[1].text.strip().replace(',', ''),
+                    "賣出(張)": detail_cells[2].text.strip().replace(',', ''),
+                    "買賣總額(張)": detail_cells[3].text.strip().replace(',', ''),
                     "買賣超(張)": detail_cells[4].text.strip().replace(',', '')
                 })
         broker_df = pd.DataFrame(details)
         return broker_df
     return pd.DataFrame()
-
 
 def create_dash(chip_data, institutional_df, price_df, stock_code):
     last_update, buy_sell_df = fetch_broker_data(stock_code)
@@ -170,6 +172,7 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
         [Input('date-range-dropdown', 'value')]
     )
     def update_buy_sell_table(period):
+        global buy_sell_df
         last_update, buy_sell_df = fetch_broker_data(stock_code, period)
         buy_sell_df = buy_sell_df.replace('', None)  # Replace '' with None (missing value)
         #buy_sell_df = buy_sell_df.dropna(subset=['buy_net', 'sell_net'])  # Drop rows where these columns have missing values
@@ -265,14 +268,14 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
         prevent_initial_call=True
     )
     def update_broker_graph(n_clicks, period):
-        global broker_name
+        global broker_name, buy_sell_df
         ctx = dash.callback_context
         if not ctx.triggered:
             return dash.no_update, {'display': 'none'}, ''
         trigger = ctx.triggered[0]['prop_id'].split('.')[0]
         if 'broker-name' in trigger:
             broker_name = eval(trigger)['index']
-        
+            
         if (broker_name, period) in broker_data_map:
             broker_df = broker_data_map[(broker_name, period)]
         else:
