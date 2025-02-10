@@ -75,7 +75,6 @@ A UI to present stock data of listed market
 `python manage.py makemigrations asset_debt`
 `python manage.py makemigrations cashflow`
 `python manage.py makemigrations profit_loss`
-`python manage.py makemigrations chip`
 create sqlite database
 `python manage.py migrate`
 
@@ -112,11 +111,6 @@ main('add_data', 103, 1)~main('add_data', 103, 4)
 ```
 from dividend.update_db import main
 main()
-```
-
-```
-from chip.update_db import update_broker_data
-update_broker_data('stock_market_analysis/data_sample/broker_branch_data.csv'(absolute path))
 ```
 
 5.
