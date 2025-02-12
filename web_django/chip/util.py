@@ -40,10 +40,10 @@ def fetch_broker_data(stock_code, period="近一日"):
             sell_broker_href = cells[5].find("a")["href"] if cells[5].find("a") else None
             buy_sell_data.append({
                 "buy_broker": cells[0].text.strip(),
-                "buy_net": cells[3].text.strip().replace(',', ''),
+                "buy_net": cells[3].text.strip(),
                 "buy_href": f"https://concords.moneydj.com{buy_broker_href}" if buy_broker_href else None,
                 "sell_broker": cells[5].text.strip(),
-                "sell_net": cells[8].text.strip().replace(',', ''),
+                "sell_net": cells[8].text.strip(),
                 "sell_href": f"https://concords.moneydj.com{sell_broker_href}" if sell_broker_href else None,
             })
     buy_sell_df = pd.DataFrame(buy_sell_data)
@@ -176,7 +176,7 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
         last_update, buy_sell_df = fetch_broker_data(stock_code, period)
         buy_sell_df = buy_sell_df.replace('', None)  # Replace '' with None (missing value)
         #buy_sell_df = buy_sell_df.dropna(subset=['buy_net', 'sell_net'])  # Drop rows where these columns have missing values
-        max_value = max(buy_sell_df['buy_net'].astype(int).max(), buy_sell_df['sell_net'].astype(int).max())
+        max_value = max(buy_sell_df['buy_net'].str.replace(',', '').astype(int).max(), buy_sell_df['sell_net'].str.replace(',', '').astype(int).max())
         buy_sell_table = html.Div([
             html.Table(
                 # Table Header
@@ -210,7 +210,7 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
                                     style={
                                         'background-color': '#fdd',
                                         'height': '20px',
-                                        'width': f"{(int(row['buy_net']) / max_value) * 100}%",
+                                        'width': f"{(int(row['buy_net'].replace(',', '')) / max_value) * 100}%",
                                         'display': 'inline-block',
                                     }
                                 )
@@ -225,7 +225,7 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
                                     style={
                                         'background-color': '#dfd',
                                         'height': '20px',
-                                        'width': f"{(int(row['sell_net']) / max_value) * 100}%",
+                                        'width': f"{(int(row['sell_net'].replace(',', '')) / max_value) * 100}%",
                                         'display': 'inline-block',
                                     }
                                 ),

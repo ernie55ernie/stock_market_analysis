@@ -40,22 +40,34 @@ def create_dash(df):
         'x': 0.5,
         'xanchor': 'center',
         'yanchor': 'top',
-        'text': '每股盈餘'
+        'text': '每股盈餘(EPS)'
     }
 
     app = DjangoDash('Profit_Loss_Dashboard')
     features = [col for col in df.columns if col != 'season']
+    df['season_display'] = df['season'].apply(
+        lambda s: f"{s.split('_')[0]}第{s.split('_')[1]}季" if '_' in s else s
+    )
     df1 = df.drop(columns='EPS')
+    df1['season'] = df1['season_display']
+    del df1['season_display']
     df1.columns = [terms[col] for col in df1.columns]
     df_eps = pd.DataFrame()
     df_eps[['year',
             'season']] = pd.DataFrame([s.split('_') for s in df['season']])
     df_eps['EPS'] = df['EPS']
+    
+    df1_for_table = df1.copy()
+    columns_with_commas = [col for col in df1_for_table.columns if col != '季']
+    for col in columns_with_commas:
+        if col in df1_for_table.columns:
+            df1_for_table[col] = df1_for_table[col].apply(lambda x: f"{x:,}")
 
-    profit_loss_table = plot_table(df1)
+    profit_loss_table = plot_table(df1_for_table)
+    
     eps_one_line_plot = go.Figure()
     eps_one_line_plot.add_trace(
-        go.Scatter(x=df['season'],
+        go.Scatter(x=df['season_display'],
                    y=df['EPS'].values.reshape(-1),
                    mode='lines+markers'))
     eps_one_line_plot.update_layout(title=eps_plot_title, yaxis_title='$NTD')

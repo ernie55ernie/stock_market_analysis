@@ -12,11 +12,20 @@ from dashboard_utils.common_styles import checklist_style, line_plot_style, tabl
 
 def create_dash(df):
     app = DjangoDash('Asset_Debt_Dashboard')
+    df['season'] = df['season'].apply(
+        lambda s: f"{s.split('_')[0]}第{s.split('_')[1]}季" if '_' in s else s
+    )
     pbr = '每股參考淨值'
     share_capital = '股本'
     df1 = df.drop(columns=['PBR', 'share_capital'])
     df1.columns = [terms[col] for col in df1.columns]
-    asset_debt_table = plot_table(df1)
+    
+    df1_for_table = df1.copy()
+    columns_with_commas = [col for col in df1_for_table.columns if col != '季']
+    for col in columns_with_commas:
+        if col in df1_for_table.columns:
+            df1_for_table[col] = df1_for_table[col].apply(lambda x: f"{x:,}")
+    asset_debt_table = plot_table(df1_for_table)
     #    features = [col for col in df1.columns if col != '季']
     one_line_plot = make_subplots(rows=3,
                                   cols=1,
