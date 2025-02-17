@@ -79,6 +79,9 @@ def fetch_broker_details(broker_href, period):
     return pd.DataFrame()
 
 def create_dash(chip_data, institutional_df, price_df, stock_code):
+    price_df['date'] = pd.to_datetime(price_df['date'], format='%Y-%m-%d')
+    institutional_df['date'] = pd.to_datetime(institutional_df['date'], format='%Y-%m-%d')
+
     last_update, buy_sell_df = fetch_broker_data(stock_code)
     broker_data_map = {}
     broker_name = None
@@ -107,7 +110,8 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
         fig_bar_with_line.add_trace(
             go.Bar(x=institutional_df['date'],
                    y=institutional_df[col],
-                   name=institutional_investors[col]))
+                   name=institutional_investors[col], 
+                   orientation='v'))
     fig_bar_with_line.update_layout(barmode='stack', yaxis={'title': "成交量"})
     fig_bar_with_line.add_trace(go.Scatter(x=institutional_df['date'],
                                            y=price_df['close'],
@@ -291,12 +295,11 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
         rev_broker_df = broker_df.sort_values(by='日期', ascending=True)
         fig = make_subplots(specs=[[{'secondary_y': True}]])
         rev_broker_df['日期'] = pd.to_datetime(rev_broker_df['日期'], format='%Y/%m/%d')
-        price_df['date'] = pd.to_datetime(price_df['date'], format='%Y-%m-%d')
-        merged_df = rev_broker_df.merge(price_df, left_on='日期', right_on='date', how='left')
+        # merged_df = rev_broker_df.merge(price_df, left_on='日期', right_on='date', how='left')
         fig.add_trace(
             go.Scatter(
-                x=rev_broker_df['日期'],
-                y=merged_df['close'],
+                x=price_df['date'],
+                y=price_df['close'],
                 name="股價",
                 mode='lines+markers',
                 marker_color='blue'
@@ -308,7 +311,8 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
                 x=rev_broker_df['日期'],
                 y=rev_broker_df['買賣超(張)'].astype(int),
                 name="買賣超",
-                marker_color=['red' if x > 0 else 'green' for x in rev_broker_df['買賣超(張)'].astype(int)]
+                marker_color=['red' if x > 0 else 'green' for x in rev_broker_df['買賣超(張)'].astype(int)], 
+                orientation='v'
             ),
             secondary_y=False
         )
