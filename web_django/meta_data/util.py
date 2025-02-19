@@ -76,30 +76,34 @@ def download_stock_price(datestr):  # 下載某天股價
     date_obj = datetime.strptime(datestr, '%Y%m%d')
 
     url = f"https://www.tpex.org.tw/www/zh-tw/afterTrading/dailyQuotes?date={date_obj.year}/{date_obj.month:02d}/{date_obj.day:02d}&id=&response=csv"
-
+    
     response = requests.get(url)
-    if response.status_code == 200:
-        # Read the CSV data
-        otc_df = pd.read_csv(
-            StringIO(response.text),  # Parse the text response
-            skiprows=2,              # Skip the first two rows
-            header=0                 # Use the third row as header
-        )
-        otc_df = otc_df[['代號', '開盤', '最高', '最低', '收盤', '成交股數']]
-        otc_df.columns = ['code', 'Open', 'High', 'Low', 'Close', 'Volume']
-        otc_df = otc_df[otc_df['code'].str.len() <= 4]
-        otc_df['Open'] = pd.to_numeric(otc_df['Open'], errors='coerce')
-        otc_df['High'] = pd.to_numeric(otc_df['High'], errors='coerce')
-        otc_df['Low'] = pd.to_numeric(otc_df['Low'], errors='coerce')
-        otc_df['Close'] = pd.to_numeric(otc_df['Close'], errors='coerce')
-        otc_df['Volume'] = pd.to_numeric(otc_df['Volume'].str.replace(',', ''), errors='coerce')
-        otc_df['PE'] = 0
-        otc_df = otc_df.dropna().reset_index(drop=True)
-        combined = pd.concat([listed_df, otc_df], axis=0).reset_index(drop=True)
-        return combined
-    else:
-        print(f"Request fail, statue code：{response.status_code}")
-        return None
+    try:
+        if response.status_code == 200:
+            # Read the CSV data
+            otc_df = pd.read_csv(
+                StringIO(response.text),  # Parse the text response
+                skiprows=2,              # Skip the first two rows
+                header=0                 # Use the third row as header
+            )
+            otc_df = otc_df[['代號', '開盤', '最高', '最低', '收盤', '成交股數']]
+            otc_df.columns = ['code', 'Open', 'High', 'Low', 'Close', 'Volume']
+            otc_df = otc_df[otc_df['code'].str.len() <= 4]
+            otc_df['Open'] = pd.to_numeric(otc_df['Open'], errors='coerce')
+            otc_df['High'] = pd.to_numeric(otc_df['High'], errors='coerce')
+            otc_df['Low'] = pd.to_numeric(otc_df['Low'], errors='coerce')
+            otc_df['Close'] = pd.to_numeric(otc_df['Close'], errors='coerce')
+            otc_df['Volume'] = pd.to_numeric(otc_df['Volume'].str.replace(',', ''), errors='coerce')
+            otc_df['PE'] = 0
+            otc_df = otc_df.dropna().reset_index(drop=True)
+            combined = pd.concat([listed_df, otc_df], axis=0).reset_index(drop=True)
+            return combined
+        else:
+            print(f"Request fail, statue code：{response.status_code}")
+            return None
+    except:
+        print("Fetch OTC failed")
+    return listed_df
 
 def download_institutional_investor(date):
     # 下載某天三大法人

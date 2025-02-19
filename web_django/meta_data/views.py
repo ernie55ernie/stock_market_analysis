@@ -29,23 +29,36 @@ if 'makemigrations' not in sys.argv and 'migrate' not in sys.argv:
 def get_latest_data():  # 即時爬取大盤資料
     start_date = datetime.strftime(previous, '%Y-%m-%d')
     end_date = datetime.strftime(today, '%Y-%m-%d')
-
-    data = yf.download("^TWII", start=start_date, end=end_date)
-    data['Date'] = data.index.astype(str)
-    data = data.reset_index(drop=True)
-    print(data)
-    # Retrieve the current Fear and Greed Index
-    index = fear_and_greed.get()
+    try:
+        data = yf.download("^TWII", start=start_date, end=end_date)
+        data['Date'] = data.index.astype(str)
+        data = data.reset_index(drop=True)
+        print(data)
+        # Retrieve the current Fear and Greed Index
+        index = fear_and_greed.get()
+        return {
+            'date': data['Date'].iloc[-1],
+            'yesterday_close': round((data['Close'].iloc[-2].values[0] if len(data['Close']) > 1 else 0), 2),
+            'today_close': round(data['Close'].iloc[-1].values[0], 2),
+            'low': round(data['Low'].iloc[-1].values[0], 2),
+            'high': round(data['High'].iloc[-1].values[0], 2),
+            'open': round((data['Open'].iloc[1].values[0] if len(data['Open']) > 1 else 0), 2),
+            'value': round(index.value),
+            'description': index.description,
+            'last_updated': index.last_update,
+        }
+    except:
+        print('Error')
     return {
-        'date': data['Date'].iloc[-1],
-        'yesterday_close': round((data['Close'].iloc[-2] if len(data['Close']) > 1 else 0), 2),
-        'today_close': round(data['Close'].iloc[-1], 2),
-        'low': round(data['Low'].iloc[-1], 2),
-        'high': round(data['High'].iloc[-1], 2),
-        'open': round((data['Open'].iloc[1] if len(data['Open']) > 1 else 0), 2),
-        'value': round(index.value),
-        'description': index.description,
-        'last_updated': index.last_update,
+        'date': '',
+        'yesterday_close': 0,
+        'today_close': 0,
+        'low': 0,
+        'high': 0,
+        'open': 0,
+        'value': 0,
+        'description': '',
+        'last_updated': '',
     }
 
 '''

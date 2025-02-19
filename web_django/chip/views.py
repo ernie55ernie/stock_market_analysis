@@ -41,16 +41,15 @@ def download(stock_code):
     total_amount = soup.select('table')[-1].find_all(
         'td', class_='t3n1')[0].text.replace(',', '')
     total_amount = int(total_amount)
-    data = data.append(
-        {
-            'term':
-            '其他',
-            'amount':
-            total_amount - data['amount'].astype(float).sum(),
-            'ratio':
-            (total_amount - data['amount'].astype(float).sum()) / total_amount,
-        },
-        ignore_index=True)
+    # Create a new row as a DataFrame
+    new_row = pd.DataFrame([{
+        'term': '其他',
+        'amount': total_amount - data['amount'].astype(float).sum(),
+        'ratio': (total_amount - data['amount'].astype(float).sum()) / total_amount,
+    }])
+    
+    # Use pd.concat() instead of append
+    data = pd.concat([data, new_row], ignore_index=True)
     '''
     # Fetch data from url3
     res = requests.get(url3, headers=headers)
