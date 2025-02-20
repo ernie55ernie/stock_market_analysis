@@ -26,12 +26,16 @@ def create_dash(df):
                               style=layout_style)
     else:
         df_total = summary_by_year(df)
-        print(df_total)
         df.columns = [terms[col] for col in df.columns]
         dividend_table = plot_table(df)
-        fig_bar = px.bar(df_total, x='年', y='數量', color='股利')
+        df_total['年'] = df_total['年'].astype(str)
+        df_total['數量'] = pd.to_numeric(df_total['數量'], errors='coerce')
+        df_total['股利'] = df_total['股利'].astype(str)
+        df_total.set_index(['年', '股利'], inplace=True)
+        print(df_total)
+        fig_bar = px.bar(df_total, x=df_total.index.get_level_values(0), y='數量', color=df_total.index.get_level_values(1))
         fig_bar.update_traces(width=0.5)
-        fig_bar.update_xaxes(tickvals=df_total['年'].unique())
+        #fig_bar.update_xaxes(tickvals=df_total.index.get_level_values(0).unique())
         app.layout = html.Div([
             html.H3(children='歷年股利', style={'text_align': 'center'}),
             dcc.Graph(id='bar_chart',

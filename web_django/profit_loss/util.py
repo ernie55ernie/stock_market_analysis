@@ -68,7 +68,7 @@ def create_dash(df):
     eps_one_line_plot = go.Figure()
     eps_one_line_plot.add_trace(
         go.Scatter(x=df['season_display'],
-                   y=df['EPS'].values.reshape(-1),
+                   y=df['EPS'].tolist(),
                    mode='lines+markers'))
     eps_one_line_plot.update_layout(title=eps_plot_title, yaxis_title='$NTD')
     eps_one_line_plot.update_xaxes(tickangle=45)
@@ -130,7 +130,7 @@ def create_dash(df):
             if col != '季':
                 percentage_line_plot.add_trace(
                     go.Scatter(x=df_pr['季'],
-                               y=df_pr[col].values.reshape(-1),
+                               y=df_pr[col].tolist(),
                                mode='lines+markers',
                                name=col))
         percentage_line_plot.update_layout(title={
@@ -178,7 +178,7 @@ def create_dash(df):
         for col in features:
             fig.add_trace(
                 go.Scatter(x=df1['季'],
-                           y=df1[col].values.reshape(-1),
+                           y=df1[col].tolist(),
                            mode='lines+markers',
                            name=col))
 

@@ -1,4 +1,5 @@
 import time
+import pandas as pd
 import yfinance as yf
 from datetime import datetime
 
@@ -40,6 +41,7 @@ def query_historical_price(stock_code, market_type, end_date, period=14):
     return data
 
 def create_dash(stock_code, company_name, price_df):
+    price_df['date'] = pd.to_datetime(price_df['date'])
     features = ['daily', '5MA', '20MA', '60MA', 'k線']
     slider_style = {'margin-right': '-100px'}
     app = DjangoDash('Price_Dashboard')
@@ -116,10 +118,10 @@ def create_dash(stock_code, company_name, price_df):
             if col == "k線":
                 fig.add_trace(
                     go.Candlestick(x=x,
-                                   open=selected_data['open'],
-                                   high=selected_data['high'],
-                                   low=selected_data['low'],
-                                   close=selected_data['daily'],
+                                   open=selected_data['open'].tolist(),
+                                   high=selected_data['high'].tolist(),
+                                   low=selected_data['low'].tolist(),
+                                   close=selected_data['daily'].tolist(),
                                    name="k線",
                                    increasing_line_color='red',
                                    decreasing_line_color='green'))
@@ -127,7 +129,7 @@ def create_dash(stock_code, company_name, price_df):
             else:
                 fig.add_trace(
                     go.Scatter(x=x,
-                               y=selected_data[col],
+                               y=selected_data[col].tolist(),
                                mode='lines',
                                name=col,
                                marker_color=line_colors[i]))
@@ -172,17 +174,17 @@ def create_dash(stock_code, company_name, price_df):
         fig = go.Figure()
         fig.add_trace(
             go.Bar(x=bull.date,
-                   y=bull.volume.values.reshape(-1) / 1e3,
+                   y=(bull.volume / 1e3).tolist(),
                    marker_color='red',
                    name='漲'))
         fig.add_trace(
             go.Bar(x=bear.date,
-                   y=bear.volume.values.reshape(-1) / 1e3,
+                   y=(bear.volume / 1e3).tolist(),
                    marker_color='green',
                    name='跌'))
         fig.add_trace(
             go.Bar(x=tie.date,
-                   y=tie.volume.values.reshape(-1) / 1e3,
+                   y=(tie.volume / 1e3).tolist(),
                    marker_color='gray',
                    name='平'))
         fig.update_layout(title={
@@ -201,7 +203,7 @@ def create_dash(stock_code, company_name, price_df):
         fig.add_trace(
             go.Scatter(
                 x=selected_data['date'],
-                y=selected_data['%K'],
+                y=selected_data['%K'].tolist(),
                 mode='lines',
                 name='%K',
                 marker_color='blue'
@@ -210,7 +212,7 @@ def create_dash(stock_code, company_name, price_df):
         fig.add_trace(
             go.Scatter(
                 x=selected_data['date'],
-                y=selected_data['%D'],
+                y=selected_data['%D'].tolist(),
                 mode='lines',
                 name='%D',
                 marker_color='orange'

@@ -109,12 +109,12 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
     for col in institutional_investors:
         fig_bar_with_line.add_trace(
             go.Bar(x=institutional_df['date'],
-                   y=institutional_df[col],
+                   y=institutional_df[col].tolist(),
                    name=institutional_investors[col], 
                    orientation='v'))
     fig_bar_with_line.update_layout(barmode='stack', yaxis={'title': "成交量"})
     fig_bar_with_line.add_trace(go.Scatter(x=institutional_df['date'],
-                                           y=price_df['close'],
+                                           y=price_df['close'].tolist(),
                                            name='收盤價',
                                            mode='lines+markers',
                                            marker_color='gray'),
@@ -299,7 +299,7 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
         fig.add_trace(
             go.Scatter(
                 x=price_df['date'],
-                y=price_df['close'],
+                y=price_df['close'].tolist(),
                 name="股價",
                 mode='lines+markers',
                 marker_color='blue'
@@ -309,7 +309,7 @@ def create_dash(chip_data, institutional_df, price_df, stock_code):
         fig.add_trace(
             go.Bar(
                 x=rev_broker_df['日期'],
-                y=rev_broker_df['買賣超(張)'].astype(int),
+                y=rev_broker_df['買賣超(張)'].astype(int).tolist(),
                 name="買賣超",
                 marker_color=['red' if x > 0 else 'green' for x in rev_broker_df['買賣超(張)'].astype(int)], 
                 orientation='v'

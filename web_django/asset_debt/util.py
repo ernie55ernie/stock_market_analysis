@@ -33,12 +33,12 @@ def create_dash(df):
                                   shared_xaxes=True)
     one_line_plot.append_trace(go.Scatter(
         x=df['season'],
-        y=100 * (df['total_debt'] / df['total_assets']).values.reshape(-1),
+        y=(100 * (df['total_debt'] / df['total_assets'])).tolist(),
         mode='lines+markers'),
                                row=1,
                                col=1)
     one_line_plot.append_trace(go.Scatter(x=df['season'],
-                                          y=df['PBR'].values.reshape(-1),
+                                          y=df['PBR'].tolist(),
                                           mode='lines+markers'),
                                row=2,
                                col=1)
@@ -88,7 +88,7 @@ def create_dash(df):
         for col in features:
             fig.add_trace(
                 go.Scatter(x=df1['季'],
-                           y=df1[col].values.reshape(-1),
+                           y=df1[col].tolist(),
                            mode='lines+markers',
                            name=col))
 

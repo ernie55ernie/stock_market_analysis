@@ -54,7 +54,7 @@ def create_dash(df):
                 line_type = 'solid'
             fig.add_trace(
                 go.Scatter(x=df['季'],
-                           y=df[col].values.reshape(-1),
+                           y=df[col].tolist(),
                            line=dict(dash=line_type),
                            mode='lines+markers',
                            name=col))

@@ -39,12 +39,13 @@ def create_dash(data):
     month_avg_price = query_month_avg_price(stock_code, start_month, end_month)
     df['當月營收'] = df['當月營收'].apply(lambda x: f"{x:,}")
     table = plot_table(df)
-
     fig_bar = make_subplots(specs=[[{"secondary_y": True}]])
     fig_bar.add_trace(
-        go.Bar(x=data['年月'], y=data['當月營收'].astype(float).values, name='月營收', opacity=0.5))
+        go.Bar(x=data['年月'], y=data['當月營收'].astype(float).tolist(), name='月營收', opacity=0.5))
+    
+    flat_close_prices = [item[0] for item in month_avg_price.loc[:, 'Close'].values.tolist()]
     fig_bar.add_trace(go.Scatter(x=data['年月'],
-                                 y=month_avg_price['Close'].values,
+                                 y=flat_close_prices,
                                  name='月均收盤價'),
                       secondary_y=True)
 
